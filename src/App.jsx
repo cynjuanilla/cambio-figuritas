@@ -6,12 +6,13 @@ import { getFirestore, doc, setDoc, onSnapshot, collection } from 'firebase/fire
 
 // --- CONFIGURACIÓN DE FIREBASE ---
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_PROYECTO.firebaseapp.com",
-  projectId: "TU_PROYECTO_ID",
-  storageBucket: "TU_PROYECTO.appspot.com",
-  messagingSenderId: "TU_SENDER_ID",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyBs53SqxkZym3MR2Sy0-sKNLz6bYbw_SgQ",
+  authDomain: "cambiofiguritas-d26bf.firebaseapp.com",
+  projectId: "cambiofiguritas-d26bf",
+  storageBucket: "cambiofiguritas-d26bf.firebasestorage.app",
+  messagingSenderId: "118837830333",
+  appId: "1:118837830333:web:cf474d0071460a8ab60dd4",
+  measurementId: "G-CX5LX6X6TR"
 };
 
 const app = initializeApp(firebaseConfig);
