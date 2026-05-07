@@ -14,28 +14,28 @@ const firebaseConfig = {
   appId: "1:118837830333:web:cf474d0071460a8ab60dd4",
   measurementId: "G-CX5LX6X6TR"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const appId = 'album-2026-pro';
 
-// --- DATA DEL ÁLBUM BASADO EN EL PDF OFICIAL (935 FIGURITAS) ---
+// --- DATA DEL ÁLBUM BASADO EN FORMATO OFICIAL (980 FIGURITAS TOTALES) ---
+// 48 Equipos x 20 figuritas = 960 + 20 Especiales = 980
 const TEAMS = [
-  { id: 'FWC', name: 'Especiales', flag: '🌟', start: 0, end: 8, isGolden: true },
-  { id: 'CC', name: 'Coca-Cola', flag: '🥤', start: 1, end: 14, isGolden: true },
-  { id: 'MEX', name: 'México', flag: '🇲🇽', start: 1, end: 19 }, { id: 'RSA', name: 'Sudáfrica', flag: '🇿🇦', start: 1, end: 19 }, { id: 'KOR', name: 'Corea Sur', flag: '🇰🇷', start: 1, end: 19 }, { id: 'CZE', name: 'Rep. Checa', flag: '🇨🇿', start: 1, end: 19 },
-  { id: 'CAN', name: 'Canadá', flag: '🇨🇦', start: 1, end: 19 }, { id: 'BIH', name: 'Bosnia', flag: '🇧🇦', start: 1, end: 19 }, { id: 'QAT', name: 'Qatar', flag: '🇶🇦', start: 1, end: 19 }, { id: 'SUI', name: 'Suiza', flag: '🇨🇭', start: 1, end: 19 },
-  { id: 'BRA', name: 'Brasil', flag: '🇧🇷', start: 1, end: 19 }, { id: 'MAR', name: 'Marruecos', flag: '🇲🇦', start: 1, end: 19 }, { id: 'HAI', name: 'Haití', flag: '🇭🇹', start: 1, end: 19 }, { id: 'SCO', name: 'Escocia', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', start: 1, end: 19 },
-  { id: 'USA', name: 'EE.UU.', flag: '🇺🇸', start: 1, end: 19 }, { id: 'PAR', name: 'Paraguay', flag: '🇵🇾', start: 1, end: 19 }, { id: 'AUS', name: 'Australia', flag: '🇦🇺', start: 1, end: 19 }, { id: 'TUR', name: 'Turquía', flag: '🇹🇷', start: 1, end: 19 },
-  { id: 'GER', name: 'Alemania', flag: '🇩🇪', start: 1, end: 19 }, { id: 'CUW', name: 'Curazao', flag: '🇨🇼', start: 1, end: 19 }, { id: 'CIV', name: 'Costa Marfil', flag: '🇨🇮', start: 1, end: 19 }, { id: 'ECU', name: 'Ecuador', flag: '🇪🇨', start: 1, end: 19 },
-  { id: 'NED', name: 'P. Bajos', flag: '🇳🇱', start: 1, end: 19 }, { id: 'JPN', name: 'Japón', flag: '🇯🇵', start: 1, end: 19 }, { id: 'SWE', name: 'Suecia', flag: '🇸🇪', start: 1, end: 19 }, { id: 'TUN', name: 'Túnez', flag: '🇹🇳', start: 1, end: 19 },
-  { id: 'BEL', name: 'Bélgica', flag: '🇧🇪', start: 1, end: 19 }, { id: 'EGY', name: 'Egipto', flag: '🇪🇬', start: 1, end: 19 }, { id: 'IRN', name: 'Irán', flag: '🇮🇷', start: 1, end: 19 }, { id: 'NZL', name: 'N. Zelanda', flag: '🇳🇿', start: 1, end: 19 },
-  { id: 'ESP', name: 'España', flag: '🇪🇸', start: 1, end: 19 }, { id: 'CPV', name: 'Cabo Verde', flag: '🇨🇻', start: 1, end: 19 }, { id: 'KSA', name: 'A. Saudita', flag: '🇸🇦', start: 1, end: 19 }, { id: 'URU', name: 'Uruguay', flag: '🇺🇾', start: 1, end: 19 },
-  { id: 'FRA', name: 'Francia', flag: '🇫🇷', start: 1, end: 19 }, { id: 'SEN', name: 'Senegal', flag: '🇸🇳', start: 1, end: 19 }, { id: 'IRQ', name: 'Irak', flag: '🇮🇶', start: 1, end: 19 }, { id: 'NOR', name: 'Noruega', flag: '🇳🇴', start: 1, end: 19 },
-  { id: 'ARG', name: 'Argentina', flag: '🇦🇷', start: 1, end: 19 }, { id: 'ALG', name: 'Argelia', flag: '🇩🇿', start: 1, end: 19 }, { id: 'AUT', name: 'Austria', flag: '🇦🇹', start: 1, end: 19 }, { id: 'JOR', name: 'Jordania', flag: '🇯🇴', start: 1, end: 19 },
-  { id: 'POR', name: 'Portugal', flag: '🇵🇹', start: 1, end: 19 }, { id: 'COD', name: 'RD Congo', flag: '🇨🇩', start: 1, end: 19 }, { id: 'UZB', name: 'Uzbekistán', flag: '🇺🇿', start: 1, end: 19 }, { id: 'COL', name: 'Colombia', flag: '🇨🇴', start: 1, end: 19 },
-  { id: 'ENG', name: 'Inglaterra', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', start: 1, end: 19 }, { id: 'CRO', name: 'Croacia', flag: '🇭🇷', start: 1, end: 19 }, { id: 'GHA', name: 'Ghana', flag: '🇬🇭', start: 1, end: 19 }, { id: 'PAN', name: 'Panamá', flag: '🇵🇦', start: 1, end: 19 }
+  { id: 'FWC', name: 'Especiales', flag: '🌟', start: 0, end: 9, isGolden: true },
+  { id: 'CC', name: 'Coca-Cola', flag: '🥤', start: 1, end: 10, isGolden: true },
+  { id: 'MEX', name: 'México', flag: '🇲🇽', start: 1, end: 20 }, { id: 'RSA', name: 'Sudáfrica', flag: '🇿🇦', start: 1, end: 20 }, { id: 'KOR', name: 'Corea Sur', flag: '🇰🇷', start: 1, end: 20 }, { id: 'CZE', name: 'Rep. Checa', flag: '🇨🇿', start: 1, end: 20 },
+  { id: 'CAN', name: 'Canadá', flag: '🇨🇦', start: 1, end: 20 }, { id: 'BIH', name: 'Bosnia', flag: '🇧🇦', start: 1, end: 20 }, { id: 'QAT', name: 'Qatar', flag: '🇶🇦', start: 1, end: 20 }, { id: 'SUI', name: 'Suiza', flag: '🇨🇭', start: 1, end: 20 },
+  { id: 'BRA', name: 'Brasil', flag: '🇧🇷', start: 1, end: 20 }, { id: 'MAR', name: 'Marruecos', flag: '🇲🇦', start: 1, end: 20 }, { id: 'HAI', name: 'Haití', flag: '🇭🇹', start: 1, end: 20 }, { id: 'SCO', name: 'Escocia', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', start: 1, end: 20 },
+  { id: 'USA', name: 'EE.UU.', flag: '🇺🇸', start: 1, end: 20 }, { id: 'PAR', name: 'Paraguay', flag: '🇵🇾', start: 1, end: 20 }, { id: 'AUS', name: 'Australia', flag: '🇦🇺', start: 1, end: 20 }, { id: 'TUR', name: 'Turquía', flag: '🇹🇷', start: 1, end: 20 },
+  { id: 'GER', name: 'Alemania', flag: '🇩🇪', start: 1, end: 20 }, { id: 'CUW', name: 'Curazao', flag: '🇨🇼', start: 1, end: 20 }, { id: 'CIV', name: 'Costa Marfil', flag: '🇨🇮', start: 1, end: 20 }, { id: 'ECU', name: 'Ecuador', flag: '🇪🇨', start: 1, end: 20 },
+  { id: 'NED', name: 'P. Bajos', flag: '🇳🇱', start: 1, end: 20 }, { id: 'JPN', name: 'Japón', flag: '🇯🇵', start: 1, end: 20 }, { id: 'SWE', name: 'Suecia', flag: '🇸🇪', start: 1, end: 20 }, { id: 'TUN', name: 'Túnez', flag: '🇹🇳', start: 1, end: 20 },
+  { id: 'BEL', name: 'Bélgica', flag: '🇧🇪', start: 1, end: 20 }, { id: 'EGY', name: 'Egipto', flag: '🇪🇬', start: 1, end: 20 }, { id: 'IRN', name: 'Irán', flag: '🇮🇷', start: 1, end: 20 }, { id: 'NZL', name: 'N. Zelanda', flag: '🇳🇿', start: 1, end: 20 },
+  { id: 'ESP', name: 'España', flag: '🇪🇸', start: 1, end: 20 }, { id: 'CPV', name: 'Cabo Verde', flag: '🇨🇻', start: 1, end: 20 }, { id: 'KSA', name: 'A. Saudita', flag: '🇸🇦', start: 1, end: 20 }, { id: 'URU', name: 'Uruguay', flag: '🇺🇾', start: 1, end: 20 },
+  { id: 'FRA', name: 'Francia', flag: '🇫🇷', start: 1, end: 20 }, { id: 'SEN', name: 'Senegal', flag: '🇸🇳', start: 1, end: 20 }, { id: 'IRQ', name: 'Irak', flag: '🇮🇶', start: 1, end: 20 }, { id: 'NOR', name: 'Noruega', flag: '🇳🇴', start: 1, end: 20 },
+  { id: 'ARG', name: 'Argentina', flag: '🇦🇷', start: 1, end: 20 }, { id: 'ALG', name: 'Argelia', flag: '🇩🇿', start: 1, end: 20 }, { id: 'AUT', name: 'Austria', flag: '🇦🇹', start: 1, end: 20 }, { id: 'JOR', name: 'Jordania', flag: '🇯🇴', start: 1, end: 20 },
+  { id: 'POR', name: 'Portugal', flag: '🇵🇹', start: 1, end: 20 }, { id: 'COD', name: 'RD Congo', flag: '🇨🇩', start: 1, end: 20 }, { id: 'UZB', name: 'Uzbekistán', flag: '🇺🇿', start: 1, end: 20 }, { id: 'COL', name: 'Colombia', flag: '🇨🇴', start: 1, end: 20 },
+  { id: 'ENG', name: 'Inglaterra', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', start: 1, end: 20 }, { id: 'CRO', name: 'Croacia', flag: '🇭🇷', start: 1, end: 20 }, { id: 'GHA', name: 'Ghana', flag: '🇬🇭', start: 1, end: 20 }, { id: 'PAN', name: 'Panamá', flag: '🇵🇦', start: 1, end: 20 }
 ];
 
 const AdBanner = () => (
@@ -363,9 +363,14 @@ export default function App() {
       <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
         <div className="bg-gradient-to-br from-blue-900 via-indigo-800 to-purple-900 text-white pt-16 pb-20 px-6 relative overflow-hidden text-center flex flex-col justify-center">
             <div className="relative z-10 max-w-lg mx-auto">
-                <div className="w-24 h-24 bg-white/10 backdrop-blur-md rounded-3xl flex items-center justify-center mx-auto mb-6 border border-white/20 shadow-xl transform rotate-3">
-                    <Book size={48} className="text-yellow-400" />
-                </div>
+                {/* --- IMAGEN DE EJEMPLO DEL LOGO --- */}
+                {/* ACÁ REEMPLAZÁS LA RUTA DE LA IMAGEN (ej: src="/img/tu-logo.png") */}
+                <img 
+                  src="https://placehold.co/400x400/facc15/1e3a8a?text=Tu+Logo\nAqu%C3%AD" 
+                  alt="Logo de la App" 
+                  className="w-32 h-32 object-cover rounded-[2rem] mx-auto mb-8 shadow-2xl transform rotate-3 border-4 border-white/20"
+                />
+
                 <h1 className="text-4xl sm:text-5xl font-black mb-4 tracking-tight">Tu Álbum 2026,<br/> <span className="text-yellow-400">Completado.</span></h1>
                 <p className="text-lg text-blue-100 mb-8 font-medium">No gastes de más. Unete a la comunidad y cambia figuritas de forma inteligente y segura.</p>
                 <button onClick={loginWithGoogle} className="w-full sm:w-auto bg-white text-indigo-900 font-bold py-4 px-8 rounded-2xl flex items-center justify-center gap-3 hover:bg-blue-50 transition shadow-lg mx-auto active:scale-95">
@@ -487,12 +492,12 @@ export default function App() {
 
             <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
               {filteredTeams.map(t => (
-                <button key={t.id} onClick={() => setSelectedTeamId(t.id)} className={`px-5 py-3 rounded-2xl whitespace-nowrap border transition-all flex flex-col items-center justify-center gap-1 ${selectedTeamId === t.id ? 'bg-indigo-600 text-white border-indigo-700 shadow-md scale-105' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'}`}>
-                  <div className="flex items-center gap-1">
-                    <span className="text-lg">{t.flag}</span>
-                    <span className="font-black text-sm">{t.id}</span>
+                <button key={t.id} onClick={() => setSelectedTeamId(t.id)} className={`px-5 py-3 rounded-2xl min-w-[5rem] whitespace-nowrap border transition-all flex flex-col items-center justify-center gap-0.5 ${selectedTeamId === t.id ? 'bg-indigo-600 text-white border-indigo-700 shadow-md scale-105' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'}`}>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="text-xl leading-none">{t.flag}</span>
+                    <span className="font-black text-sm leading-none uppercase">{t.id}</span>
                   </div>
-                  <span className="text-[10px] opacity-80 font-medium">{t.name}</span>
+                  <span className="text-[10px] opacity-80 font-medium leading-none tracking-wide">{t.name}</span>
                 </button>
               ))}
             </div>
@@ -690,9 +695,9 @@ export default function App() {
                         {Object.entries(shareData.miss).map(([t,n]) => {
                           const team = TEAMS.find(tm => tm.id === t);
                           return (
-                            <div key={`m-${t}`} className="bg-white/80 px-2.5 py-1.5 rounded-xl border border-rose-200/50 shadow-sm text-xs font-mono">
-                              <span className="text-sm mr-1">{team?.flag}</span>
-                              <span className="font-bold text-rose-800 mr-1">{t}:</span>
+                            <div key={`m-${t}`} className="bg-white/80 px-3 py-2 rounded-xl border border-rose-200/50 shadow-sm text-sm font-mono flex items-center">
+                              <span className="text-base mr-1.5">{team?.flag}</span>
+                              <span className="font-bold text-rose-800 mr-2">{t}:</span>
                               <span className="text-slate-700">{n.join(', ')}</span>
                             </div>
                           );
@@ -713,9 +718,9 @@ export default function App() {
                         {Object.entries(shareData.dups).map(([t,n]) => {
                           const team = TEAMS.find(tm => tm.id === t);
                           return (
-                            <div key={`d-${t}`} className="bg-white/80 px-2.5 py-1.5 rounded-xl border border-emerald-200/50 shadow-sm text-xs font-mono">
-                              <span className="text-sm mr-1">{team?.flag}</span>
-                              <span className="font-bold text-emerald-800 mr-1">{t}:</span>
+                            <div key={`d-${t}`} className="bg-white/80 px-3 py-2 rounded-xl border border-emerald-200/50 shadow-sm text-sm font-mono flex items-center">
+                              <span className="text-base mr-1.5">{team?.flag}</span>
+                              <span className="font-bold text-emerald-800 mr-2">{t}:</span>
                               <span className="text-slate-700">{n.join(', ')}</span>
                             </div>
                           );
