@@ -1,19 +1,17 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Book, RefreshCw, Star, Users, Check, Plus, Minus, Search, Shield, Key, PlusCircle, MessageSquare, LogOut, Heart, DollarSign, Coffee, List, Type, CheckSquare, Trash2, Globe, Share2, Copy, Image as ImageIcon, Zap } from 'lucide-react';
+import { Book, RefreshCw, Star, Users, Check, Plus, Minus, Search, Shield, Key, PlusCircle, MessageSquare, LogOut, Heart, Coffee, Type, CheckSquare, Trash2, Globe, Share2, Copy, Image as ImageIcon, Zap, Printer, X } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, setDoc, onSnapshot, collection } from 'firebase/firestore';
 
 // --- CONFIGURACIÓN DE FIREBASE ---
-// RECUERDA: Pegar aquí tus claves reales de la consola de Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyBs53SqxkZym3MR2Sy0-sKNLz6bYbw_SgQ",
-  authDomain: "cambiofiguritas-d26bf.firebaseapp.com",
-  projectId: "cambiofiguritas-d26bf",
-  storageBucket: "cambiofiguritas-d26bf.firebasestorage.app",
-  messagingSenderId: "118837830333",
-  appId: "1:118837830333:web:cf474d0071460a8ab60dd4",
-  measurementId: "G-CX5LX6X6TR"
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_PROYECTO.firebaseapp.com",
+  projectId: "TU_PROYECTO_ID",
+  storageBucket: "TU_PROYECTO.appspot.com",
+  messagingSenderId: "TU_SENDER_ID",
+  appId: "TU_APP_ID"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -21,22 +19,22 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const appId = 'album-2026-pro';
 
-// --- DATA DEL ÁLBUM BASADO EN EL PDF OFICIAL ---
+// --- DATA DEL ÁLBUM BASADO EN EL PDF OFICIAL (935 FIGURITAS) ---
 const TEAMS = [
   { id: 'FWC', name: 'Especiales', flag: '🌟', start: 0, end: 8, isGolden: true },
   { id: 'CC', name: 'Coca-Cola', flag: '🥤', start: 1, end: 14, isGolden: true },
-  { id: 'MEX', name: 'México', flag: '🇲🇽', start: 0, end: 11 }, { id: 'RSA', name: 'Sudáfrica', flag: '🇿🇦', start: 0, end: 11 }, { id: 'KOR', name: 'Corea Sur', flag: '🇰🇷', start: 0, end: 11 }, { id: 'CZE', name: 'Rep. Checa', flag: '🇨🇿', start: 0, end: 11 },
-  { id: 'CAN', name: 'Canadá', flag: '🇨🇦', start: 0, end: 11 }, { id: 'BIH', name: 'Bosnia', flag: '🇧🇦', start: 0, end: 11 }, { id: 'QAT', name: 'Qatar', flag: '🇶🇦', start: 0, end: 11 }, { id: 'SUI', name: 'Suiza', flag: '🇨🇭', start: 0, end: 11 },
-  { id: 'BRA', name: 'Brasil', flag: '🇧🇷', start: 0, end: 11 }, { id: 'MAR', name: 'Marruecos', flag: '🇲🇦', start: 0, end: 11 }, { id: 'HAI', name: 'Haití', flag: '🇭🇹', start: 0, end: 11 }, { id: 'SCO', name: 'Escocia', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', start: 0, end: 11 },
-  { id: 'USA', name: 'EE.UU.', flag: '🇺🇸', start: 0, end: 11 }, { id: 'PAR', name: 'Paraguay', flag: '🇵🇾', start: 0, end: 11 }, { id: 'AUS', name: 'Australia', flag: '🇦🇺', start: 0, end: 11 }, { id: 'TUR', name: 'Turquía', flag: '🇹🇷', start: 0, end: 11 },
-  { id: 'GER', name: 'Alemania', flag: '🇩🇪', start: 0, end: 11 }, { id: 'CUW', name: 'Curazao', flag: '🇨🇼', start: 0, end: 11 }, { id: 'CIV', name: 'Costa Marfil', flag: '🇨🇮', start: 0, end: 11 }, { id: 'ECU', name: 'Ecuador', flag: '🇪🇨', start: 0, end: 11 },
-  { id: 'NED', name: 'P. Bajos', flag: '🇳🇱', start: 0, end: 11 }, { id: 'JPN', name: 'Japón', flag: '🇯🇵', start: 0, end: 11 }, { id: 'SWE', name: 'Suecia', flag: '🇸🇪', start: 0, end: 11 }, { id: 'TUN', name: 'Túnez', flag: '🇹🇳', start: 0, end: 11 },
-  { id: 'BEL', name: 'Bélgica', flag: '🇧🇪', start: 0, end: 11 }, { id: 'EGY', name: 'Egipto', flag: '🇪🇬', start: 0, end: 11 }, { id: 'IRN', name: 'Irán', flag: '🇮🇷', start: 0, end: 11 }, { id: 'NZL', name: 'N. Zelanda', flag: '🇳🇿', start: 0, end: 11 },
-  { id: 'ESP', name: 'España', flag: '🇪🇸', start: 0, end: 11 }, { id: 'CPV', name: 'Cabo Verde', flag: '🇨🇻', start: 0, end: 11 }, { id: 'KSA', name: 'A. Saudita', flag: '🇸🇦', start: 0, end: 11 }, { id: 'URU', name: 'Uruguay', flag: '🇺🇾', start: 0, end: 11 },
-  { id: 'FRA', name: 'Francia', flag: '🇫🇷', start: 0, end: 11 }, { id: 'SEN', name: 'Senegal', flag: '🇸🇳', start: 0, end: 11 }, { id: 'IRQ', name: 'Irak', flag: '🇮🇶', start: 0, end: 11 }, { id: 'NOR', name: 'Noruega', flag: '🇳🇴', start: 0, end: 11 },
-  { id: 'ARG', name: 'Argentina', flag: '🇦🇷', start: 0, end: 11 }, { id: 'ALG', name: 'Argelia', flag: '🇩🇿', start: 0, end: 11 }, { id: 'AUT', name: 'Austria', flag: '🇦🇹', start: 0, end: 11 }, { id: 'JOR', name: 'Jordania', flag: '🇯🇴', start: 0, end: 11 },
-  { id: 'POR', name: 'Portugal', flag: '🇵🇹', start: 0, end: 11 }, { id: 'COD', name: 'RD Congo', flag: '🇨🇩', start: 0, end: 11 }, { id: 'UZB', name: 'Uzbekistán', flag: '🇺🇿', start: 0, end: 11 }, { id: 'COL', name: 'Colombia', flag: '🇨🇴', start: 0, end: 11 },
-  { id: 'ENG', name: 'Inglaterra', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', start: 0, end: 11 }, { id: 'CRO', name: 'Croacia', flag: '🇭🇷', start: 0, end: 11 }, { id: 'GHA', name: 'Ghana', flag: '🇬🇭', start: 0, end: 11 }, { id: 'PAN', name: 'Panamá', flag: '🇵🇦', start: 0, end: 11 }
+  { id: 'MEX', name: 'México', flag: '🇲🇽', start: 1, end: 19 }, { id: 'RSA', name: 'Sudáfrica', flag: '🇿🇦', start: 1, end: 19 }, { id: 'KOR', name: 'Corea Sur', flag: '🇰🇷', start: 1, end: 19 }, { id: 'CZE', name: 'Rep. Checa', flag: '🇨🇿', start: 1, end: 19 },
+  { id: 'CAN', name: 'Canadá', flag: '🇨🇦', start: 1, end: 19 }, { id: 'BIH', name: 'Bosnia', flag: '🇧🇦', start: 1, end: 19 }, { id: 'QAT', name: 'Qatar', flag: '🇶🇦', start: 1, end: 19 }, { id: 'SUI', name: 'Suiza', flag: '🇨🇭', start: 1, end: 19 },
+  { id: 'BRA', name: 'Brasil', flag: '🇧🇷', start: 1, end: 19 }, { id: 'MAR', name: 'Marruecos', flag: '🇲🇦', start: 1, end: 19 }, { id: 'HAI', name: 'Haití', flag: '🇭🇹', start: 1, end: 19 }, { id: 'SCO', name: 'Escocia', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', start: 1, end: 19 },
+  { id: 'USA', name: 'EE.UU.', flag: '🇺🇸', start: 1, end: 19 }, { id: 'PAR', name: 'Paraguay', flag: '🇵🇾', start: 1, end: 19 }, { id: 'AUS', name: 'Australia', flag: '🇦🇺', start: 1, end: 19 }, { id: 'TUR', name: 'Turquía', flag: '🇹🇷', start: 1, end: 19 },
+  { id: 'GER', name: 'Alemania', flag: '🇩🇪', start: 1, end: 19 }, { id: 'CUW', name: 'Curazao', flag: '🇨🇼', start: 1, end: 19 }, { id: 'CIV', name: 'Costa Marfil', flag: '🇨🇮', start: 1, end: 19 }, { id: 'ECU', name: 'Ecuador', flag: '🇪🇨', start: 1, end: 19 },
+  { id: 'NED', name: 'P. Bajos', flag: '🇳🇱', start: 1, end: 19 }, { id: 'JPN', name: 'Japón', flag: '🇯🇵', start: 1, end: 19 }, { id: 'SWE', name: 'Suecia', flag: '🇸🇪', start: 1, end: 19 }, { id: 'TUN', name: 'Túnez', flag: '🇹🇳', start: 1, end: 19 },
+  { id: 'BEL', name: 'Bélgica', flag: '🇧🇪', start: 1, end: 19 }, { id: 'EGY', name: 'Egipto', flag: '🇪🇬', start: 1, end: 19 }, { id: 'IRN', name: 'Irán', flag: '🇮🇷', start: 1, end: 19 }, { id: 'NZL', name: 'N. Zelanda', flag: '🇳🇿', start: 1, end: 19 },
+  { id: 'ESP', name: 'España', flag: '🇪🇸', start: 1, end: 19 }, { id: 'CPV', name: 'Cabo Verde', flag: '🇨🇻', start: 1, end: 19 }, { id: 'KSA', name: 'A. Saudita', flag: '🇸🇦', start: 1, end: 19 }, { id: 'URU', name: 'Uruguay', flag: '🇺🇾', start: 1, end: 19 },
+  { id: 'FRA', name: 'Francia', flag: '🇫🇷', start: 1, end: 19 }, { id: 'SEN', name: 'Senegal', flag: '🇸🇳', start: 1, end: 19 }, { id: 'IRQ', name: 'Irak', flag: '🇮🇶', start: 1, end: 19 }, { id: 'NOR', name: 'Noruega', flag: '🇳🇴', start: 1, end: 19 },
+  { id: 'ARG', name: 'Argentina', flag: '🇦🇷', start: 1, end: 19 }, { id: 'ALG', name: 'Argelia', flag: '🇩🇿', start: 1, end: 19 }, { id: 'AUT', name: 'Austria', flag: '🇦🇹', start: 1, end: 19 }, { id: 'JOR', name: 'Jordania', flag: '🇯🇴', start: 1, end: 19 },
+  { id: 'POR', name: 'Portugal', flag: '🇵🇹', start: 1, end: 19 }, { id: 'COD', name: 'RD Congo', flag: '🇨🇩', start: 1, end: 19 }, { id: 'UZB', name: 'Uzbekistán', flag: '🇺🇿', start: 1, end: 19 }, { id: 'COL', name: 'Colombia', flag: '🇨🇴', start: 1, end: 19 },
+  { id: 'ENG', name: 'Inglaterra', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', start: 1, end: 19 }, { id: 'CRO', name: 'Croacia', flag: '🇭🇷', start: 1, end: 19 }, { id: 'GHA', name: 'Ghana', flag: '🇬🇭', start: 1, end: 19 }, { id: 'PAN', name: 'Panamá', flag: '🇵🇦', start: 1, end: 19 }
 ];
 
 const AdBanner = () => (
@@ -79,7 +77,7 @@ export default function App() {
       await signInWithPopup(auth, provider);
     } catch (error) {
       console.error(error);
-      alert("Error en Firebase: Asegurate de agregar el dominio de Vercel en la consola de Firebase Authentication.");
+      alert("Error en Firebase: Asegurate de agregar tu dominio en Firebase Authentication > Dominios autorizados.");
     }
   };
 
@@ -233,7 +231,7 @@ export default function App() {
       .filter(m => m.matchScore > 0).sort((a, b) => b.matchScore - a.matchScore);
   }, [marketData, shareData, marketFilter]);
 
-  // --- GENERADOR DE IMAGEN PARA REDES ---
+  // --- REDES Y COMPARTIR ---
   const generateImage = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -315,7 +313,7 @@ export default function App() {
     ctx.fillStyle = '#ffffff'; ctx.font = 'bold 35px sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('¡Ayudame a completar mi álbum!', 540, 1800);
     ctx.fillStyle = '#93c5fd'; ctx.font = '30px sans-serif';
-    ctx.fillText('Generado en cambio-figuritas.vercel.app', 540, 1850);
+    ctx.fillText('Generado en tu-album-2026.app', 540, 1850);
 
     const link = document.createElement('a');
     link.download = `Figuritas_${user?.displayName || '2026'}.png`;
@@ -323,15 +321,39 @@ export default function App() {
     link.click();
   };
 
-  const copyText = () => {
-    const format = (d) => Object.entries(d).map(([t, n]) => `*${t}:* ${n.join(', ')}`).join('\n');
+  const handleShareToSocial = async () => {
+    const format = (d) => Object.entries(d).map(([t, n]) => {
+      const team = TEAMS.find(tm => tm.id === t);
+      return `${team?.flag || ''} *${t}:* ${n.join(', ')}`;
+    }).join('\n');
+    
     let text = `🏆 ¡Hola! Estoy juntando figuritas del Mundial 2026.\n\n`;
     if(Object.keys(shareData.dups).length > 0) text += `✅ *TENGO REPETIDAS:*\n${format(shareData.dups)}\n\n`;
     if(Object.keys(shareData.miss).length > 0) text += `❌ *ME FALTAN:*\n${format(shareData.miss)}\n\n`;
-    text += `🔄 ¡Cambiemos! Entra a la app: https://cambio-figuritas.vercel.app`;
-    
+    text += `🔄 ¡Cambiemos! Entra a la app web: https://tualbum2026.com`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Cambiemos Figuritas', text: text });
+      } catch (err) {}
+    } else {
+      navigator.clipboard.writeText(text);
+      alert("Lista copiada al portapapeles. ¡Pégala en WhatsApp!");
+    }
+  };
+
+  const copyTextOnly = () => {
+    const format = (d) => Object.entries(d).map(([t, n]) => {
+      const team = TEAMS.find(tm => tm.id === t);
+      return `${team?.flag || ''} *${t}:* ${n.join(', ')}`;
+    }).join('\n');
+
+    let text = `🏆 ¡Hola! Estoy juntando figuritas del Mundial 2026.\n\n`;
+    if(Object.keys(shareData.dups).length > 0) text += `✅ *TENGO REPETIDAS:*\n${format(shareData.dups)}\n\n`;
+    if(Object.keys(shareData.miss).length > 0) text += `❌ *ME FALTAN:*\n${format(shareData.miss)}\n\n`;
+    text += `🔄 ¡Cambiemos! Entra a la app web: https://tualbum2026.com`;
     navigator.clipboard.writeText(text);
-    alert("Lista copiada al portapapeles. ¡Lista para pegar en WhatsApp!");
+    alert("Lista copiada al portapapeles. ¡Pégala en WhatsApp!");
   };
 
   // --- RENDER: PANTALLA DE LOGIN ---
@@ -355,7 +377,7 @@ export default function App() {
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center text-center hover:shadow-md transition">
                     <CheckSquare size={32} className="text-blue-600 mb-3"/>
                     <h3 className="font-black text-slate-800 text-lg">Control Total</h3>
-                    <p className="text-slate-500 text-sm mt-1">Llevá la cuenta exacta de tus figuritas pegadas y repetidas (del 0 al 11).</p>
+                    <p className="text-slate-500 text-sm mt-1">Llevá la cuenta exacta de tus figuritas pegadas y repetidas en todos los equipos.</p>
                 </div>
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center text-center hover:shadow-md transition">
                     <Shield size={32} className="text-teal-600 mb-3"/>
@@ -375,9 +397,53 @@ export default function App() {
 
   // --- RENDER: APLICACIÓN PRINCIPAL ---
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col pb-24 font-sans">
-      {/* CABECERA VIBRANTE */}
-      <header className="bg-gradient-to-r from-blue-800 to-indigo-900 text-white p-4 flex justify-between items-center shadow-lg sticky top-0 z-50">
+    <>
+    {/* --- VISTA DE IMPRESIÓN (Solo visible al imprimir) --- */}
+    <div className="hidden print:block text-black bg-white p-8 w-full">
+        <div className="text-center border-b-2 border-black pb-4 mb-6">
+            <h1 className="text-3xl font-black uppercase">Intercambio - Mundial 2026</h1>
+            <p className="text-lg mt-2">Coleccionista: <strong>{user.displayName || '___________________'}</strong></p>
+        </div>
+        <div className="flex justify-between gap-8">
+            <div className="flex-1 border-r border-gray-300 pr-8">
+                <h2 className="text-xl font-bold mb-4 bg-gray-100 p-2 text-center border border-gray-400">❌ ME FALTAN</h2>
+                <div className="columns-2 gap-4 text-sm font-mono leading-relaxed">
+                    {Object.keys(shareData.miss).length === 0 ? <p>¡Álbum Completo!</p> : 
+                        Object.entries(shareData.miss).map(([t, n]) => {
+                          const team = TEAMS.find(tm => tm.id === t);
+                          return (
+                            <div key={`print-m-${t}`} className="mb-3 break-inside-avoid">
+                                <span className="font-bold border-b border-black text-base">{team?.flag} {t}:</span>
+                                <span className="ml-1">{n.join(', ')}</span>
+                            </div>
+                          );
+                        })
+                    }
+                </div>
+            </div>
+            <div className="flex-1">
+                <h2 className="text-xl font-bold mb-4 bg-gray-100 p-2 text-center border border-gray-400">✅ TENGO REPETIDAS</h2>
+                <div className="columns-2 gap-4 text-sm font-mono leading-relaxed">
+                    {Object.keys(shareData.dups).length === 0 ? <p>Ninguna por ahora.</p> : 
+                        Object.entries(shareData.dups).map(([t, n]) => {
+                          const team = TEAMS.find(tm => tm.id === t);
+                          return (
+                            <div key={`print-d-${t}`} className="mb-3 break-inside-avoid">
+                                <span className="font-bold border-b border-black text-base">{team?.flag} {t}:</span>
+                                <span className="ml-1">{n.join(', ')}</span>
+                            </div>
+                          );
+                        })
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {/* --- VISTA WEB APP --- */}
+    <div className="min-h-screen bg-slate-50 flex flex-col pb-24 font-sans print:hidden">
+      {/* CABECERA */}
+      <header className="bg-gradient-to-r from-blue-800 to-indigo-900 text-white p-4 flex justify-between items-center shadow-lg sticky top-0 z-40">
         <div className="flex items-center gap-3">
           {user.photoURL ? <img src={user.photoURL} className="w-11 h-11 rounded-full border-2 border-white/30 shadow-md" alt="perfil" /> : <div className="w-11 h-11 bg-yellow-400 text-blue-900 rounded-full flex items-center justify-center font-bold shadow-md">U</div>}
           <div className="flex flex-col">
@@ -420,8 +486,12 @@ export default function App() {
 
             <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
               {filteredTeams.map(t => (
-                <button key={t.id} onClick={() => setSelectedTeamId(t.id)} className={`px-5 py-3 rounded-2xl whitespace-nowrap font-bold text-sm border transition-all ${selectedTeamId === t.id ? 'bg-indigo-600 text-white border-indigo-700 shadow-md scale-105' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'}`}>
-                  <span className="text-lg mr-2">{t.flag}</span>{t.name}
+                <button key={t.id} onClick={() => setSelectedTeamId(t.id)} className={`px-5 py-3 rounded-2xl whitespace-nowrap border transition-all flex flex-col items-center justify-center gap-1 ${selectedTeamId === t.id ? 'bg-indigo-600 text-white border-indigo-700 shadow-md scale-105' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'}`}>
+                  <div className="flex items-center gap-1">
+                    <span className="text-lg">{t.flag}</span>
+                    <span className="font-black text-sm">{t.id}</span>
+                  </div>
+                  <span className="text-[10px] opacity-80 font-medium">{t.name}</span>
                 </button>
               ))}
             </div>
@@ -599,22 +669,68 @@ export default function App() {
       {/* MODAL DE DIFUSIÓN */}
       {showQuickList && (
         <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl p-8 transform animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
-            <h3 className="text-2xl font-black mb-6 text-center text-slate-800 border-b border-slate-100 pb-4">Centro de Difusión</h3>
-            <div className="space-y-5 overflow-y-auto mb-8 pr-2 scrollbar-hide flex-1">
-               <div className="bg-rose-50 p-5 rounded-3xl border border-rose-100">
-                  <h4 className="font-black text-rose-700 text-sm mb-3 uppercase tracking-widest flex items-center gap-2"><Book size={18}/> Me Faltan</h4>
-                  <p className="text-xs font-mono leading-relaxed text-rose-900 break-words">{Object.keys(shareData.miss).length === 0 ? "¡Álbum completo!" : Object.entries(shareData.miss).map(([t,n]) => `${t}: ${n.join(',')}`).join(' | ')}</p>
+          <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-6 sm:p-8 transform animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+              <h3 className="text-xl sm:text-2xl font-black text-slate-800">Centro de Difusión</h3>
+              <button onClick={() => setShowQuickList(false)} className="bg-slate-100 p-2.5 rounded-full text-slate-500 hover:bg-rose-100 hover:text-rose-600 transition-all active:scale-90"><X size={20}/></button>
+            </div>
+            
+            {/* CONTENEDOR SCROLL CON CAJITAS DE PAÍSES */}
+            <div className="space-y-6 overflow-y-auto mb-8 pr-2 scrollbar-hide flex-1">
+               
+               {/* SECCIÓN: FALTAN */}
+               <div className="bg-rose-50 p-4 sm:p-5 rounded-3xl border border-rose-100 flex flex-col max-h-[40vh]">
+                  <h4 className="font-black text-rose-700 text-sm mb-3 uppercase tracking-widest flex items-center gap-2 sticky top-0 bg-rose-50 z-10"><Book size={18}/> Me Faltan</h4>
+                  <div className="overflow-y-auto scrollbar-hide">
+                    {Object.keys(shareData.miss).length === 0 ? (
+                      <p className="text-sm font-medium text-rose-900">¡Álbum completo!</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(shareData.miss).map(([t,n]) => {
+                          const team = TEAMS.find(tm => tm.id === t);
+                          return (
+                            <div key={`m-${t}`} className="bg-white/80 px-2.5 py-1.5 rounded-xl border border-rose-200/50 shadow-sm text-xs font-mono">
+                              <span className="text-sm mr-1">{team?.flag}</span>
+                              <span className="font-bold text-rose-800 mr-1">{t}:</span>
+                              <span className="text-slate-700">{n.join(', ')}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                </div>
-               <div className="bg-emerald-50 p-5 rounded-3xl border border-emerald-100">
-                  <h4 className="font-black text-emerald-700 text-sm mb-3 uppercase tracking-widest flex items-center gap-2"><RefreshCw size={18}/> Tengo Repes</h4>
-                  <p className="text-xs font-mono leading-relaxed text-emerald-900 break-words">{Object.keys(shareData.dups).length === 0 ? "Ninguna repetida." : Object.entries(shareData.dups).map(([t,n]) => `${t}: ${n.join(',')}`).join(' | ')}</p>
+
+               {/* SECCIÓN: REPETIDAS */}
+               <div className="bg-emerald-50 p-4 sm:p-5 rounded-3xl border border-emerald-100 flex flex-col max-h-[40vh]">
+                  <h4 className="font-black text-emerald-700 text-sm mb-3 uppercase tracking-widest flex items-center gap-2 sticky top-0 bg-emerald-50 z-10"><RefreshCw size={18}/> Tengo Repes</h4>
+                  <div className="overflow-y-auto scrollbar-hide">
+                    {Object.keys(shareData.dups).length === 0 ? (
+                      <p className="text-sm font-medium text-emerald-900">Ninguna repetida.</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(shareData.dups).map(([t,n]) => {
+                          const team = TEAMS.find(tm => tm.id === t);
+                          return (
+                            <div key={`d-${t}`} className="bg-white/80 px-2.5 py-1.5 rounded-xl border border-emerald-200/50 shadow-sm text-xs font-mono">
+                              <span className="text-sm mr-1">{team?.flag}</span>
+                              <span className="font-bold text-emerald-800 mr-1">{t}:</span>
+                              <span className="text-slate-700">{n.join(', ')}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-slate-100 pt-6">
-              <button onClick={copyText} className="bg-slate-100 text-slate-700 font-black py-4 rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-slate-200 transition-all active:scale-95 text-xs uppercase tracking-wide"><Copy size={20}/> Texto</button>
-              <button onClick={generateImage} className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white font-black py-4 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg transition-all active:scale-95 text-xs uppercase tracking-wide"><ImageIcon size={20}/> Imagen Insta</button>
-              <button onClick={() => setShowQuickList(false)} className="bg-rose-50 text-rose-600 font-black py-4 rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-rose-100 transition-all active:scale-95 text-xs uppercase tracking-wide"><Minus size={20}/> Cerrar</button>
+
+            {/* BOTONERA INFERIOR */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 border-t border-slate-100 pt-6">
+              <button onClick={copyTextOnly} className="bg-slate-100 text-slate-700 font-black py-4 rounded-2xl flex flex-col items-center justify-center gap-1.5 hover:bg-slate-200 transition-all active:scale-95 text-[10px] sm:text-xs uppercase tracking-wide"><Copy size={18}/> Texto</button>
+              <button onClick={generateImage} className="bg-gradient-to-br from-fuchsia-600 to-purple-600 text-white font-black py-4 rounded-2xl flex flex-col items-center justify-center gap-1.5 shadow-md transition-all active:scale-95 text-[10px] sm:text-xs uppercase tracking-wide"><ImageIcon size={18}/> Imagen Insta</button>
+              <button onClick={() => window.print()} className="bg-slate-800 text-white font-black py-4 rounded-2xl flex flex-col items-center justify-center gap-1.5 shadow-md transition-all hover:bg-black active:scale-95 text-[10px] sm:text-xs uppercase tracking-wide"><Printer size={18}/> Imprimir</button>
+              <button onClick={handleShareToSocial} className="bg-indigo-600 text-white font-black py-4 rounded-2xl flex flex-col items-center justify-center gap-1.5 hover:bg-indigo-700 transition-all active:scale-95 text-[10px] sm:text-xs uppercase tracking-wide shadow-md"><Share2 size={18}/> Compartir</button>
             </div>
           </div>
         </div>
@@ -636,5 +752,6 @@ export default function App() {
         </button>
       </nav>
     </div>
+    </>
   );
 }
