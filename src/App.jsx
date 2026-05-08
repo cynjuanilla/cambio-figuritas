@@ -20,10 +20,10 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const appId = 'album-2026-pro';
 
-// --- DATA DEL ÁLBUM BASADO EN EL PDF OFICIAL (980 FIGURITAS) ---
+// --- DATA DEL ÁLBUM BASADO EN EL PDF OFICIAL ---
 const TEAMS = [
-  { id: 'FWC', name: 'Especiales', flag: '🌟', start: 0, end: 9, isGolden: true },
-  { id: 'CC', name: 'Coca-Cola', flag: '🥤', start: 1, end: 10, isGolden: true },
+  { id: 'FWC', name: 'Especiales', flag: '🌟', start: 0, end: 18, isGolden: true },
+  { id: 'CC', name: 'Coca-Cola', flag: '🥤', start: 1, end: 14, isGolden: true },
   { id: 'MEX', name: 'México', flag: '🇲🇽', start: 1, end: 20 }, { id: 'RSA', name: 'Sudáfrica', flag: '🇿🇦', start: 1, end: 20 }, { id: 'KOR', name: 'Corea Sur', flag: '🇰🇷', start: 1, end: 20 }, { id: 'CZE', name: 'Rep. Checa', flag: '🇨🇿', start: 1, end: 20 },
   { id: 'CAN', name: 'Canadá', flag: '🇨🇦', start: 1, end: 20 }, { id: 'BIH', name: 'Bosnia', flag: '🇧🇦', start: 1, end: 20 }, { id: 'QAT', name: 'Qatar', flag: '🇶🇦', start: 1, end: 20 }, { id: 'SUI', name: 'Suiza', flag: '🇨🇭', start: 1, end: 20 },
   { id: 'BRA', name: 'Brasil', flag: '🇧🇷', start: 1, end: 20 }, { id: 'MAR', name: 'Marruecos', flag: '🇲🇦', start: 1, end: 20 }, { id: 'HAI', name: 'Haití', flag: '🇭🇹', start: 1, end: 20 }, { id: 'SCO', name: 'Escocia', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', start: 1, end: 20 },
@@ -50,13 +50,12 @@ const AdBanner = () => {
 
   return (
     <div className="w-full bg-slate-200 border-2 border-dashed border-slate-300 text-slate-500 flex flex-col items-center justify-center py-4 px-2 rounded-xl text-center shadow-inner my-4 min-h-[100px] overflow-hidden">
-      {<ins className="adsbygoogle"
+      <ins className="adsbygoogle"
            style={{ display: 'block', width: '100%' }}
            data-ad-client="ca-pub-8830921682992590" 
            data-ad-slot="9332723829"
            data-ad-format="auto"
            data-full-width-responsive="true"></ins>
-      }
       <span className="text-xs uppercase font-bold tracking-widest mb-1">Espacio Publicitario</span>
       <span className="text-[10px]">Tus anuncios de AdSense aparecerán aquí.</span>
     </div>
@@ -214,7 +213,6 @@ export default function App() {
     if (myGroups.some(g => g.id === code)) return alert("Ya estás en el grupo.");
     
     let fetchedName = `Grupo ${code}`;
-    // Intenta buscar el nombre real que le pusieron al crearlo
     try {
       const groupSnap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'groups', code));
       if (groupSnap.exists() && groupSnap.data().name) {
@@ -306,7 +304,6 @@ export default function App() {
     const ctx = canvas.getContext('2d');
     canvas.width = 1080; canvas.height = 1920;
     
-    // Fondo vibrante
     const grd = ctx.createLinearGradient(0, 0, 1080, 1920);
     grd.addColorStop(0, '#1e3a8a'); grd.addColorStop(1, '#4c1d95');
     ctx.fillStyle = grd; ctx.fillRect(0, 0, 1080, 1920);
@@ -314,7 +311,6 @@ export default function App() {
     ctx.beginPath(); ctx.arc(100, 200, 300, 0, 2 * Math.PI); ctx.fill();
     ctx.beginPath(); ctx.arc(900, 1600, 400, 0, 2 * Math.PI); ctx.fill();
 
-    // Cabecera
     ctx.fillStyle = '#facc15'; ctx.font = 'bold 70px sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('🏆 ÁLBUM MUNDIAL 2026', 540, 150);
     ctx.fillStyle = '#ffffff'; ctx.font = '40px sans-serif';
@@ -377,7 +373,6 @@ export default function App() {
     draw('❌ ME FALTAN', shareData.miss, 80, true);
     draw('✅ REPETIDAS', shareData.dups, 580, false);
 
-    // Footer
     ctx.fillStyle = '#ffffff'; ctx.font = 'bold 35px sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('¡Ayudame a completar mi álbum!', 540, 1800);
     ctx.fillStyle = '#93c5fd'; ctx.font = '30px sans-serif';
@@ -430,14 +425,12 @@ export default function App() {
       <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
         <div className="bg-gradient-to-br from-blue-900 via-indigo-800 to-purple-900 text-white pt-16 pb-20 px-6 relative overflow-hidden text-center flex flex-col justify-center">
             <div className="relative z-10 max-w-lg mx-auto">
-                {/* --- IMAGEN DE EJEMPLO DEL LOGO --- */}
                 <img 
                   src="/img/favico.png" 
                   onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/400x400/facc15/1e3a8a?text=Logo"; }}
                   alt="Logo de la App" 
                   className="w-32 h-32 object-cover rounded-[2rem] mx-auto mb-8 shadow-2xl transform rotate-3 border-4 border-white/20"
                 />
-
                 <h1 className="text-4xl sm:text-5xl font-black mb-4 tracking-tight">Tu Álbum 2026,<br/> <span className="text-yellow-400">Completado.</span></h1>
                 <p className="text-lg text-blue-100 mb-8 font-medium">No gastes de más. Unete a la comunidad y cambia figuritas de forma inteligente y segura.</p>
                 <button onClick={loginWithGoogle} className="w-full sm:w-auto bg-white text-indigo-900 font-bold py-4 px-8 rounded-2xl flex items-center justify-center gap-3 hover:bg-blue-50 transition shadow-lg mx-auto active:scale-95">
@@ -471,46 +464,67 @@ export default function App() {
   // --- RENDER: APLICACIÓN PRINCIPAL ---
   return (
     <>
-    {/* --- VISTA DE IMPRESIÓN (Solo visible al imprimir) --- */}
-    <div className="hidden print:block text-black bg-white p-8 w-full">
-        <div className="text-center border-b-2 border-black pb-4 mb-6">
-            <h1 className="text-3xl font-black uppercase">Intercambio - Mundial 2026</h1>
-            <p className="text-lg mt-2">Coleccionista: <strong>{user.displayName || '___________________'}</strong></p>
-        </div>
-        <div className="flex justify-between gap-8">
-            <div className="flex-1 border-r border-gray-300 pr-8">
-                <h2 className="text-xl font-bold mb-4 bg-gray-100 p-2 text-center border border-gray-400">❌ ME FALTAN</h2>
-                <div className="columns-2 gap-4 text-sm font-mono leading-relaxed">
-                    {Object.keys(shareData.miss).length === 0 ? <p>¡Álbum Completo!</p> : 
-                        Object.entries(shareData.miss).map(([t, n]) => {
-                          const team = TEAMS.find(tm => tm.id === t);
-                          return (
-                            <div key={`print-m-${t}`} className="mb-3 break-inside-avoid">
-                                <span className="font-bold border-b border-black text-base">{team?.flag} {t}:</span>
-                                <span className="ml-1">{n.join(', ')}</span>
-                            </div>
-                          );
-                        })
-                    }
-                </div>
+    {/* --- VISTA DE IMPRESIÓN (GRILLA COMPLETA TIPO CONTROL) --- */}
+    <div className="hidden print:block text-black bg-white w-full">
+        <style>{`
+          @page { size: landscape; margin: 10mm; }
+          @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          }
+        `}</style>
+        <div className="flex justify-between items-end border-b-2 border-black pb-2 mb-4">
+            <div>
+              <h1 className="text-2xl font-black uppercase text-blue-900 tracking-tight leading-none">Control de Figuritas - Mundial 2026</h1>
+              <p className="text-sm mt-1">Coleccionista: <strong>{user.displayName || '___________________'}</strong></p>
             </div>
-            <div className="flex-1">
-                <h2 className="text-xl font-bold mb-4 bg-gray-100 p-2 text-center border border-gray-400">✅ TENGO REPETIDAS</h2>
-                <div className="columns-2 gap-4 text-sm font-mono leading-relaxed">
-                    {Object.keys(shareData.dups).length === 0 ? <p>Ninguna por ahora.</p> : 
-                        Object.entries(shareData.dups).map(([t, n]) => {
-                          const team = TEAMS.find(tm => tm.id === t);
-                          return (
-                            <div key={`print-d-${t}`} className="mb-3 break-inside-avoid">
-                                <span className="font-bold border-b border-black text-base">{team?.flag} {t}:</span>
-                                <span className="ml-1">{n.join(', ')}</span>
-                            </div>
-                          );
-                        })
-                    }
+            <div className="text-right">
+                <p className="text-sm text-slate-800">Faltan: <strong>{stats.total - stats.have}</strong></p>
+                <p className="text-sm text-slate-800">Repetidas: <strong>{stats.dups}</strong></p>
+                {/* LEYENDA VISUAL */}
+                <div className="flex gap-3 text-[10px] mt-2 justify-end">
+                   <span className="text-black">Falta (Normal)</span>
+                   <span className="text-slate-400 line-through">Pegada (Tachada)</span>
+                   <span className="font-black text-black bg-slate-300 border border-black px-1 rounded-sm">Repetida (Fondo gris)</span>
                 </div>
             </div>
         </div>
+
+        <table className="w-full text-[10px] font-mono border-collapse text-center leading-none">
+          <tbody>
+            {TEAMS.map(team => {
+              const cols = Array.from({ length: 20 }); 
+              return (
+                <tr key={`print-${team.id}`} className="border-b border-slate-400">
+                  <td className="border-r border-slate-400 font-bold px-2 py-1.5 text-left w-36 bg-blue-50 text-blue-900 whitespace-nowrap">
+                    <span className="text-sm mr-1">{team.flag}</span> {team.name}
+                  </td>
+                  {cols.map((_, i) => {
+                    const num = team.start + i;
+                    if (num > team.end) {
+                      return <td key={i} className="p-1 border-r border-slate-200 bg-slate-100"></td>;
+                    }
+                    const id = `${team.id}-${num}`;
+                    const count = myStickers[id] || 0;
+                    
+                    // LÓGICA DE ESTILOS DE IMPRESIÓN
+                    let cellStyle = "text-slate-400 line-through"; // Ya la tiene (1 vez)
+                    if (count === 0) {
+                      cellStyle = "text-black"; // Le falta
+                    } else if (count > 1) {
+                      cellStyle = "font-black text-black bg-slate-300 border border-black"; // La tiene repetida
+                    }
+                    
+                    return (
+                      <td key={id} className={`p-1 border-r border-slate-200 ${cellStyle}`}>
+                        {team.id}{num === 0 ? '00' : num}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
     </div>
 
     {/* --- VISTA WEB APP --- */}
@@ -565,7 +579,7 @@ export default function App() {
                 </button>
             </div>
 
-            {/* BÚSQUEDA Y SELECTOR DE EQUIPOS (CON CRUZ PARA BORRAR) */}
+            {/* BÚSQUEDA Y SELECTOR DE EQUIPOS */}
             <div className="relative mb-2">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
               <input type="text" placeholder="Buscar equipo..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-12 pr-10 py-3.5 rounded-2xl border border-slate-200 shadow-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition text-sm font-medium" />
@@ -616,7 +630,6 @@ export default function App() {
                   const c = myStickers[id] || 0;
                   const isGolden = selectedTeamObj.isGolden || num === selectedTeamObj.start;
                   
-                  // Estilos Dinámicos
                   let btnStyle = "bg-slate-50 text-slate-300 border-dashed border-slate-200";
                   if (c === 0 && isGolden) btnStyle = "bg-yellow-50/50 text-yellow-600/40 border-dashed border-yellow-300"; 
                   if (c === 1 && !isGolden) btnStyle = "bg-blue-50 text-blue-800 border-blue-400 shadow-sm ring-1 ring-blue-400/20";
@@ -678,7 +691,6 @@ export default function App() {
                      <div>
                        <div className="font-black text-slate-800 text-lg flex items-center gap-2">
                          {group.name} 
-                         {/* BOTÓN PARA RENOMBRAR GRUPOS YA CREADOS */}
                          <button onClick={() => renameLocalGroup(group.id, group.name)} className="text-slate-400 hover:text-indigo-600 p-1" title="Renombrar localmente">
                            <Edit2 size={16}/>
                          </button>
@@ -726,7 +738,6 @@ export default function App() {
                           <div>
                              <span className="font-black text-slate-800 text-lg block leading-tight">{m.displayName}</span>
                              {(() => {
-                                // Muestra el nombre correcto del grupo incluso si estás en la pestaña "Mercado Global"
                                 if (marketFilter !== 'all') {
                                   return <span className="text-[10px] font-bold bg-teal-100 text-teal-800 px-2.5 py-1 rounded-lg uppercase tracking-wider mt-1 inline-block">{myGroups.find(g => g.id === marketFilter)?.name || 'Grupo Privado'}</span>;
                                 }
