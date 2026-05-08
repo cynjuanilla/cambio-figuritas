@@ -52,13 +52,13 @@ const AdBanner = () => {
   return (
     <div className="w-full bg-slate-200 border-2 border-dashed border-slate-300 text-slate-500 flex flex-col items-center justify-center py-4 px-2 rounded-xl text-center shadow-inner my-4 min-h-[100px] overflow-hidden">
       {/* CUANDO TENGAS ADSENSE APROBADO, DESCOMENTÁ ESTAS LÍNEAS Y PONÉ TUS DATOS */}
-      {/* <ins className="adsbygoogle"
+      {<ins className="adsbygoogle"
            style={{ display: 'block', width: '100%' }}
-           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" 
-           data-ad-slot="XXXXXXXXXX"
+           data-ad-client="ca-pub-8830921682992590" 
+           data-ad-slot="9332723829"
            data-ad-format="auto"
            data-full-width-responsive="true"></ins>
-      */}
+      }
       <span className="text-xs uppercase font-bold tracking-widest mb-1">Espacio Publicitario</span>
       <span className="text-[10px]">Tus anuncios de AdSense aparecerán aquí.</span>
     </div>
@@ -687,7 +687,7 @@ export default function App() {
                <h2 className="text-3xl font-black mb-4 tracking-tight relative z-10">¿Te ayudamos a completar el álbum?</h2>
                <p className="text-rose-100 text-lg mb-8 font-medium relative z-10 max-w-md mx-auto leading-relaxed">Esta aplicación es 100% gratuita y sin publicidad invasiva. Si lograste tus objetivos gracias a los intercambios, ayudanos a mantener los servidores invitándonos un cafecito.</p>
                {/* --- ACÁ REEMPLAZÁ CON TU LINK DE CAFECITO --- */}
-               <a href="https://cafecito.app/TU_USUARIO_ACA" target="_blank" rel="noreferrer" className="bg-slate-900 text-white font-black py-5 px-10 rounded-2xl inline-flex items-center gap-3 hover:bg-black transition-all shadow-xl active:scale-95 text-lg relative z-10">
+               <a href="https://cafecito.app/cambio-figuritas" target="_blank" rel="noreferrer" className="bg-slate-900 text-white font-black py-5 px-10 rounded-2xl inline-flex items-center gap-3 hover:bg-black transition-all shadow-xl active:scale-95 text-lg relative z-10">
                  <Coffee size={24}/> Invitar un Cafecito
                </a>
             </div>
