@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Book, RefreshCw, Star, Users, Check, Plus, Minus, Search, Shield, Key, PlusCircle, MessageSquare, LogOut, Heart, Coffee, Type, CheckSquare, Trash2, Globe, Share2, Copy, Image as ImageIcon, Zap, Printer, X, Bell } from 'lucide-react';
+import { Book, RefreshCw, Star, Users, Check, Plus, Minus, Search, Shield, Key, PlusCircle, MessageSquare, LogOut, Heart, Coffee, Type, CheckSquare, Trash2, Globe, Share2, Copy, Image as ImageIcon, Zap, Printer, X, Bell, Edit2 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, setDoc, onSnapshot, collection } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from 'firebase/firestore';
 
 // --- CONFIGURACIÓN DE FIREBASE ---
 const firebaseConfig = {
@@ -148,13 +148,11 @@ export default function App() {
     }, { merge: true });
   };
 
-  // --- ACTUALIZACIONES DE FIGURITAS (ACÁ ESTÁ LA CORRECCIÓN DE BORRADO) ---
+  // --- ACTUALIZACIONES DE FIGURITAS ---
   const updateSticker = (id, delta) => {
     const next = { ...myStickers };
     const count = (next[id] || 0) + delta;
     
-    // CORRECCIÓN: Si llega a 0, le asignamos 0 en vez de hacer "delete". 
-    // Así Firebase actualiza el valor correctamente y lo limpia.
     next[id] = count <= 0 ? 0 : count;
     
     setMyStickers(next); 
@@ -169,7 +167,7 @@ export default function App() {
     for (let i = selectedTeamObj.start; i <= selectedTeamObj.end; i++) {
       const id = `${selectedTeamId}-${i}`;
       if (action === 'mark_all') next[id] = Math.max(1, next[id] || 0);
-      else if (action === 'clear') next[id] = 0; // CORRECCIÓN: Asignamos 0
+      else if (action === 'clear') next[id] = 0; 
     }
     setMyStickers(next); 
     saveData(next);
@@ -203,15 +201,39 @@ export default function App() {
     const updated = [...myGroups, { id: groupId, name: newGroupName }];
     setMyGroups(updated); setNewGroupName('');
     saveData(myStickers, updated);
+
+    // Guarda el nombre públicamente para que la app lo sepa al unirse
+    try {
+      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'groups', groupId), { name: newGroupName });
+    } catch (e) { console.error(e); }
   };
 
   const joinGroup = async () => {
     if (!joinCode.trim() || !user) return;
     const code = joinCode.toUpperCase();
     if (myGroups.some(g => g.id === code)) return alert("Ya estás en el grupo.");
-    const updated = [...myGroups, { id: code, name: `Grupo ${code}` }];
+    
+    let fetchedName = `Grupo ${code}`;
+    // Intenta buscar el nombre real que le pusieron al crearlo
+    try {
+      const groupSnap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'groups', code));
+      if (groupSnap.exists() && groupSnap.data().name) {
+         fetchedName = groupSnap.data().name;
+      }
+    } catch (e) { console.error(e); }
+
+    const updated = [...myGroups, { id: code, name: fetchedName }];
     setMyGroups(updated); setJoinCode('');
     saveData(myStickers, updated);
+  };
+
+  const renameLocalGroup = (id, currentName) => {
+    const newName = window.prompt("Cambiar el nombre del grupo (solo lo verás vos):", currentName);
+    if (newName && newName.trim()) {
+      const updated = myGroups.map(g => g.id === id ? { ...g, name: newName.trim() } : g);
+      setMyGroups(updated);
+      saveData(myStickers, updated);
+    }
   };
 
   // --- CÁLCULOS GLOBALES ---
@@ -255,8 +277,6 @@ export default function App() {
   }, [marketData, shareData, marketFilter]);
 
   // --- LÓGICA DE ALERTA DE MATCHES EN GRUPOS ---
-  // Calcula cuántos usuarios en TODOS TUS GRUPOS tienen un match perfecto 
-  // (Te dan algo que te falta Y les das algo que les falta).
   const groupMatchesCount = useMemo(() => {
     if (myGroups.length === 0) return 0;
     
@@ -266,7 +286,6 @@ export default function App() {
 
     const myGroupIds = myGroups.map(g => g.id);
 
-    // Filtramos solo la gente que está en algún grupo tuyo
     const usersInMyGroups = marketData.filter(u => {
         if (!u.groups) return false;
         return u.groups.some(gId => myGroupIds.includes(gId));
@@ -276,10 +295,7 @@ export default function App() {
     usersInMyGroups.forEach(u => {
       const iNeedFromThem = (u.duplicates || []).filter(id => mMissing.includes(id));
       const theyNeedFromMe = (u.missing || []).filter(id => mDups.includes(id));
-      // MATCH PERFECTO: Ambos se benefician
-      if (iNeedFromThem.length > 0 && theyNeedFromMe.length > 0) {
-         perfectMatchesCount++;
-      }
+      if (iNeedFromThem.length > 0 && theyNeedFromMe.length > 0) perfectMatchesCount++;
     });
     return perfectMatchesCount;
   }, [marketData, shareData, myGroups]);
@@ -549,7 +565,7 @@ export default function App() {
                 </button>
             </div>
 
-            {/* BÚSQUEDA Y SELECTOR DE EQUIPOS */}
+            {/* BÚSQUEDA Y SELECTOR DE EQUIPOS (CON CRUZ PARA BORRAR) */}
             <div className="relative mb-2">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
               <input type="text" placeholder="Buscar equipo..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-12 pr-10 py-3.5 rounded-2xl border border-slate-200 shadow-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition text-sm font-medium" />
@@ -660,7 +676,13 @@ export default function App() {
                  {myGroups.map(group => (
                    <div key={group.id} className="bg-white p-5 rounded-3xl border border-slate-100 flex justify-between items-center shadow-sm hover:shadow-md transition">
                      <div>
-                       <div className="font-black text-slate-800 text-lg">{group.name}</div>
+                       <div className="font-black text-slate-800 text-lg flex items-center gap-2">
+                         {group.name} 
+                         {/* BOTÓN PARA RENOMBRAR GRUPOS YA CREADOS */}
+                         <button onClick={() => renameLocalGroup(group.id, group.name)} className="text-slate-400 hover:text-indigo-600 p-1" title="Renombrar localmente">
+                           <Edit2 size={16}/>
+                         </button>
+                       </div>
                        <div className="text-xs text-slate-500 font-medium mt-1">CÓDIGO: <span className="font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-md">{group.id}</span></div>
                      </div>
                      <button onClick={() => { setMarketFilter(group.id); setActiveTab('market'); }} className="bg-indigo-50 text-indigo-700 px-5 py-3 rounded-xl font-black text-xs hover:bg-indigo-100 transition uppercase tracking-wide">Ver Matches</button>
@@ -703,7 +725,18 @@ export default function App() {
                           {m.photoURL ? <img src={m.photoURL} className="w-14 h-14 rounded-full border-2 border-indigo-100" alt="profile"/> : <div className="w-14 h-14 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-black text-xl">U</div>}
                           <div>
                              <span className="font-black text-slate-800 text-lg block leading-tight">{m.displayName}</span>
-                             {marketFilter !== 'all' ? <span className="text-[10px] font-bold bg-teal-100 text-teal-800 px-2.5 py-1 rounded-lg uppercase tracking-wider mt-1 inline-block">{myGroups.find(g => g.id === marketFilter)?.name || 'Grupo Privado'}</span> : <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg uppercase tracking-wider mt-1 inline-block">Global</span>}
+                             {(() => {
+                                // Muestra el nombre correcto del grupo incluso si estás en la pestaña "Mercado Global"
+                                if (marketFilter !== 'all') {
+                                  return <span className="text-[10px] font-bold bg-teal-100 text-teal-800 px-2.5 py-1 rounded-lg uppercase tracking-wider mt-1 inline-block">{myGroups.find(g => g.id === marketFilter)?.name || 'Grupo Privado'}</span>;
+                                }
+                                const sharedGroups = (m.groups || []).filter(gid => myGroups.some(mg => mg.id === gid));
+                                if (sharedGroups.length > 0) {
+                                  const sharedNames = sharedGroups.map(gid => myGroups.find(mg => mg.id === gid)?.name).join(', ');
+                                  return <span className="text-[10px] font-bold bg-teal-100 text-teal-800 px-2.5 py-1 rounded-lg uppercase tracking-wider mt-1 inline-block">{sharedNames}</span>;
+                                }
+                                return <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg uppercase tracking-wider mt-1 inline-block">Global</span>;
+                             })()}
                           </div>
                         </div>
                         <a href={`mailto:${m.email}?subject=Intercambio%20de%20Figuritas%202026`} className="bg-slate-900 hover:bg-black text-white px-5 py-3 rounded-xl text-sm font-black shadow-md transition-all active:scale-95 flex items-center gap-2"><MessageSquare size={16}/> Contactar</a>
@@ -733,7 +766,6 @@ export default function App() {
                <Heart size={64} className="mx-auto mb-6 text-rose-200 relative z-10" fill="currentColor" />
                <h2 className="text-3xl font-black mb-4 tracking-tight relative z-10">¿Te ayudamos a completar el álbum?</h2>
                <p className="text-rose-100 text-lg mb-8 font-medium relative z-10 max-w-md mx-auto leading-relaxed">Esta aplicación es 100% gratuita y sin publicidad invasiva. Si lograste tus objetivos gracias a los intercambios, ayudanos a mantener los servidores invitándonos un cafecito.</p>
-               {/* --- ACÁ REEMPLAZÁ CON TU LINK DE CAFECITO --- */}
                <a href="https://cafecito.app/cambio-figuritas" target="_blank" rel="noreferrer" className="bg-slate-900 text-white font-black py-5 px-10 rounded-2xl inline-flex items-center gap-3 hover:bg-black transition-all shadow-xl active:scale-95 text-lg relative z-10">
                  <Coffee size={24}/> Invitar un Cafecito
                </a>
