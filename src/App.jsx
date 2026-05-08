@@ -14,13 +14,14 @@ const firebaseConfig = {
   appId: "1:118837830333:web:cf474d0071460a8ab60dd4",
   measurementId: "G-CX5LX6X6TR"
 };
+
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const appId = 'album-2026-pro';
 
-// --- DATA DEL ÁLBUM BASADO EN FORMATO OFICIAL (980 FIGURITAS TOTALES) ---
-// 48 Equipos x 20 figuritas = 960 + 20 Especiales = 980
+// --- DATA DEL ÁLBUM BASADO EN EL PDF OFICIAL (980 FIGURITAS) ---
 const TEAMS = [
   { id: 'FWC', name: 'Especiales', flag: '🌟', start: 0, end: 9, isGolden: true },
   { id: 'CC', name: 'Coca-Cola', flag: '🥤', start: 1, end: 10, isGolden: true },
@@ -38,12 +39,31 @@ const TEAMS = [
   { id: 'ENG', name: 'Inglaterra', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', start: 1, end: 20 }, { id: 'CRO', name: 'Croacia', flag: '🇭🇷', start: 1, end: 20 }, { id: 'GHA', name: 'Ghana', flag: '🇬🇭', start: 1, end: 20 }, { id: 'PAN', name: 'Panamá', flag: '🇵🇦', start: 1, end: 20 }
 ];
 
-const AdBanner = () => (
-  <div className="w-full bg-slate-200 border-2 border-dashed border-slate-400 text-slate-500 flex flex-col items-center justify-center py-3 px-2 rounded-xl text-center shadow-inner my-4">
-    <span className="text-xs uppercase font-bold tracking-widest mb-1">Espacio Patrocinado</span>
-    <span className="text-[10px]">Tu marca aquí - Contacto: app@tualbum.com</span>
-  </div>
-);
+// --- COMPONENTE DE PUBLICIDAD ADSENSE ---
+const AdBanner = () => {
+  useEffect(() => {
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (e) {
+      console.error("AdSense Error", e);
+    }
+  }, []);
+
+  return (
+    <div className="w-full bg-slate-200 border-2 border-dashed border-slate-300 text-slate-500 flex flex-col items-center justify-center py-4 px-2 rounded-xl text-center shadow-inner my-4 min-h-[100px] overflow-hidden">
+      {/* CUANDO TENGAS ADSENSE APROBADO, DESCOMENTÁ ESTAS LÍNEAS Y PONÉ TUS DATOS */}
+      {/* <ins className="adsbygoogle"
+           style={{ display: 'block', width: '100%' }}
+           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" 
+           data-ad-slot="XXXXXXXXXX"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      */}
+      <span className="text-xs uppercase font-bold tracking-widest mb-1">Espacio Publicitario</span>
+      <span className="text-[10px]">Tus anuncios de AdSense aparecerán aquí.</span>
+    </div>
+  );
+};
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -119,7 +139,7 @@ export default function App() {
     TEAMS.forEach(t => {
       for (let i = t.start; i <= t.end; i++) {
         const id = `${t.id}-${i}`;
-        if (!stickers[id]) miss.push(id);
+        if (!stickers[id] || stickers[id] === 0) miss.push(id);
         if (stickers[id] > 1) dups.push(id);
       }
     });
@@ -130,11 +150,15 @@ export default function App() {
     }, { merge: true });
   };
 
-  // --- ACTUALIZACIONES DE FIGURITAS ---
+  // --- ACTUALIZACIONES DE FIGURITAS (ACÁ ESTÁ LA CORRECCIÓN DE BORRADO) ---
   const updateSticker = (id, delta) => {
     const next = { ...myStickers };
     const count = (next[id] || 0) + delta;
-    if (count <= 0) delete next[id]; else next[id] = count;
+    
+    // CORRECCIÓN: Si llega a 0, le asignamos 0 en vez de hacer "delete". 
+    // Así Firebase actualiza el valor correctamente y lo limpia.
+    next[id] = count <= 0 ? 0 : count;
+    
     setMyStickers(next); 
     saveData(next);
   };
@@ -147,7 +171,7 @@ export default function App() {
     for (let i = selectedTeamObj.start; i <= selectedTeamObj.end; i++) {
       const id = `${selectedTeamId}-${i}`;
       if (action === 'mark_all') next[id] = Math.max(1, next[id] || 0);
-      else if (action === 'clear') delete next[id];
+      else if (action === 'clear') next[id] = 0; // CORRECCIÓN: Asignamos 0
     }
     setMyStickers(next); 
     saveData(next);
@@ -252,7 +276,6 @@ export default function App() {
     ctx.fillStyle = '#ffffff'; ctx.font = '40px sans-serif';
     ctx.fillText(`Coleccionista: ${user?.displayName || "Anónimo"}`, 540, 220);
 
-    // Lógica dinámica de tamaño de letra para que entre todo
     const getLineCount = (data) => {
         let lines = 0;
         Object.values(data).forEach(numbers => {
@@ -364,9 +387,9 @@ export default function App() {
         <div className="bg-gradient-to-br from-blue-900 via-indigo-800 to-purple-900 text-white pt-16 pb-20 px-6 relative overflow-hidden text-center flex flex-col justify-center">
             <div className="relative z-10 max-w-lg mx-auto">
                 {/* --- IMAGEN DE EJEMPLO DEL LOGO --- */}
-                {/* ACÁ REEMPLAZÁS LA RUTA DE LA IMAGEN (ej: src="/img/tu-logo.png") */}
                 <img 
-                  src="https://placehold.co/400x400/facc15/1e3a8a?text=Tu+Logo\nAqu%C3%AD" 
+                  src="/img/favico.png" 
+                  onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/400x400/facc15/1e3a8a?text=Logo"; }}
                   alt="Logo de la App" 
                   className="w-32 h-32 object-cover rounded-[2rem] mx-auto mb-8 shadow-2xl transform rotate-3 border-4 border-white/20"
                 />
@@ -557,6 +580,7 @@ export default function App() {
                 })}
               </div>
             </div>
+            <AdBanner />
           </>
         )}
 
@@ -597,6 +621,7 @@ export default function App() {
                  ))}
                </div>
              }
+             <AdBanner />
            </div>
         )}
 
@@ -661,7 +686,8 @@ export default function App() {
                <Heart size={64} className="mx-auto mb-6 text-rose-200 relative z-10" fill="currentColor" />
                <h2 className="text-3xl font-black mb-4 tracking-tight relative z-10">¿Te ayudamos a completar el álbum?</h2>
                <p className="text-rose-100 text-lg mb-8 font-medium relative z-10 max-w-md mx-auto leading-relaxed">Esta aplicación es 100% gratuita y sin publicidad invasiva. Si lograste tus objetivos gracias a los intercambios, ayudanos a mantener los servidores invitándonos un cafecito.</p>
-               <a href="https://cafecito.app" target="_blank" rel="noreferrer" className="bg-slate-900 text-white font-black py-5 px-10 rounded-2xl inline-flex items-center gap-3 hover:bg-black transition-all shadow-xl active:scale-95 text-lg relative z-10">
+               {/* --- ACÁ REEMPLAZÁ CON TU LINK DE CAFECITO --- */}
+               <a href="https://cafecito.app/TU_USUARIO_ACA" target="_blank" rel="noreferrer" className="bg-slate-900 text-white font-black py-5 px-10 rounded-2xl inline-flex items-center gap-3 hover:bg-black transition-all shadow-xl active:scale-95 text-lg relative z-10">
                  <Coffee size={24}/> Invitar un Cafecito
                </a>
             </div>
