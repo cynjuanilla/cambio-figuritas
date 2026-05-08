@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Book, RefreshCw, Star, Users, Check, Plus, Minus, Search, Shield, Key, PlusCircle, MessageSquare, LogOut, Heart, Coffee, Type, CheckSquare, Trash2, Globe, Share2, Copy, Image as ImageIcon, Zap, Printer, X } from 'lucide-react';
+import { Book, RefreshCw, Star, Users, Check, Plus, Minus, Search, Shield, Key, PlusCircle, MessageSquare, LogOut, Heart, Coffee, Type, CheckSquare, Trash2, Globe, Share2, Copy, Image as ImageIcon, Zap, Printer, X, Bell } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, setDoc, onSnapshot, collection } from 'firebase/firestore';
@@ -20,10 +20,10 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const appId = 'album-2026-pro';
 
-// --- DATA DEL ÁLBUM BASADO EN EL PDF OFICIAL ---
+// --- DATA DEL ÁLBUM BASADO EN EL PDF OFICIAL (980 FIGURITAS) ---
 const TEAMS = [
-  { id: 'FWC', name: 'Especiales', flag: '🌟', start: 0, end: 18, isGolden: true },
-  { id: 'CC', name: 'Coca-Cola', flag: '🥤', start: 1, end: 14, isGolden: true },
+  { id: 'FWC', name: 'Especiales', flag: '🌟', start: 0, end: 9, isGolden: true },
+  { id: 'CC', name: 'Coca-Cola', flag: '🥤', start: 1, end: 10, isGolden: true },
   { id: 'MEX', name: 'México', flag: '🇲🇽', start: 1, end: 20 }, { id: 'RSA', name: 'Sudáfrica', flag: '🇿🇦', start: 1, end: 20 }, { id: 'KOR', name: 'Corea Sur', flag: '🇰🇷', start: 1, end: 20 }, { id: 'CZE', name: 'Rep. Checa', flag: '🇨🇿', start: 1, end: 20 },
   { id: 'CAN', name: 'Canadá', flag: '🇨🇦', start: 1, end: 20 }, { id: 'BIH', name: 'Bosnia', flag: '🇧🇦', start: 1, end: 20 }, { id: 'QAT', name: 'Qatar', flag: '🇶🇦', start: 1, end: 20 }, { id: 'SUI', name: 'Suiza', flag: '🇨🇭', start: 1, end: 20 },
   { id: 'BRA', name: 'Brasil', flag: '🇧🇷', start: 1, end: 20 }, { id: 'MAR', name: 'Marruecos', flag: '🇲🇦', start: 1, end: 20 }, { id: 'HAI', name: 'Haití', flag: '🇭🇹', start: 1, end: 20 }, { id: 'SCO', name: 'Escocia', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', start: 1, end: 20 },
@@ -50,7 +50,6 @@ const AdBanner = () => {
 
   return (
     <div className="w-full bg-slate-200 border-2 border-dashed border-slate-300 text-slate-500 flex flex-col items-center justify-center py-4 px-2 rounded-xl text-center shadow-inner my-4 min-h-[100px] overflow-hidden">
-      {/* CUANDO TENGAS ADSENSE APROBADO, DESCOMENTÁ ESTAS LÍNEAS Y PONÉ TUS DATOS */}
       {<ins className="adsbygoogle"
            style={{ display: 'block', width: '100%' }}
            data-ad-client="ca-pub-8830921682992590" 
@@ -254,6 +253,36 @@ export default function App() {
       })
       .filter(m => m.matchScore > 0).sort((a, b) => b.matchScore - a.matchScore);
   }, [marketData, shareData, marketFilter]);
+
+  // --- LÓGICA DE ALERTA DE MATCHES EN GRUPOS ---
+  // Calcula cuántos usuarios en TODOS TUS GRUPOS tienen un match perfecto 
+  // (Te dan algo que te falta Y les das algo que les falta).
+  const groupMatchesCount = useMemo(() => {
+    if (myGroups.length === 0) return 0;
+    
+    let mMissing = []; let mDups = [];
+    Object.keys(shareData.miss).forEach(t => shareData.miss[t].forEach(n => mMissing.push(`${t}-${n}`)));
+    Object.keys(shareData.dups).forEach(t => shareData.dups[t].forEach(n => mDups.push(`${t}-${n}`)));
+
+    const myGroupIds = myGroups.map(g => g.id);
+
+    // Filtramos solo la gente que está en algún grupo tuyo
+    const usersInMyGroups = marketData.filter(u => {
+        if (!u.groups) return false;
+        return u.groups.some(gId => myGroupIds.includes(gId));
+    });
+
+    let perfectMatchesCount = 0;
+    usersInMyGroups.forEach(u => {
+      const iNeedFromThem = (u.duplicates || []).filter(id => mMissing.includes(id));
+      const theyNeedFromMe = (u.missing || []).filter(id => mDups.includes(id));
+      // MATCH PERFECTO: Ambos se benefician
+      if (iNeedFromThem.length > 0 && theyNeedFromMe.length > 0) {
+         perfectMatchesCount++;
+      }
+    });
+    return perfectMatchesCount;
+  }, [marketData, shareData, myGroups]);
 
   // --- REDES Y COMPARTIR ---
   const generateImage = () => {
@@ -469,7 +498,21 @@ export default function App() {
     </div>
 
     {/* --- VISTA WEB APP --- */}
-    <div className="min-h-screen bg-slate-50 flex flex-col pb-24 font-sans print:hidden">
+    <div className="min-h-screen bg-slate-50 flex flex-col pb-24 font-sans print:hidden relative">
+      
+      {/* ALERTA FLOTANTE (Solo si hay matches en tus grupos y NO estás en la pestaña de Cambio) */}
+      {groupMatchesCount > 0 && activeTab !== 'market' && (
+        <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-40 animate-in slide-in-from-bottom-5 fade-in duration-300 w-[90%] max-w-sm">
+          <button
+            onClick={() => setActiveTab('market')}
+            className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 text-amber-950 px-5 py-3 rounded-full font-black text-sm shadow-[0_8px_30px_rgb(0,0,0,0.15)] border-2 border-white flex items-center justify-center gap-2 hover:scale-105 transition-transform"
+          >
+            <Bell className="animate-bounce" size={20} fill="currentColor" />
+            ¡Tenés {groupMatchesCount} {groupMatchesCount === 1 ? 'Match perfecto' : 'Matches perfectos'}!
+          </button>
+        </div>
+      )}
+
       {/* CABECERA */}
       <header className="bg-gradient-to-r from-blue-800 to-indigo-900 text-white p-4 flex justify-between items-center shadow-lg sticky top-0 z-40">
         <div className="flex items-center gap-3">
@@ -509,7 +552,12 @@ export default function App() {
             {/* BÚSQUEDA Y SELECTOR DE EQUIPOS */}
             <div className="relative mb-2">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
-              <input type="text" placeholder="Buscar equipo..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-slate-200 shadow-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition text-sm font-medium" />
+              <input type="text" placeholder="Buscar equipo..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-12 pr-10 py-3.5 rounded-2xl border border-slate-200 shadow-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition text-sm font-medium" />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-2 rounded-full hover:bg-slate-100 active:scale-95">
+                  <X size={16} strokeWidth={3} />
+                </button>
+              )}
             </div>
 
             <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
@@ -655,7 +703,7 @@ export default function App() {
                           {m.photoURL ? <img src={m.photoURL} className="w-14 h-14 rounded-full border-2 border-indigo-100" alt="profile"/> : <div className="w-14 h-14 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-black text-xl">U</div>}
                           <div>
                              <span className="font-black text-slate-800 text-lg block leading-tight">{m.displayName}</span>
-                             {marketFilter !== 'all' ? <span className="text-[10px] font-bold bg-teal-100 text-teal-800 px-2.5 py-1 rounded-lg uppercase tracking-wider mt-1 inline-block">Grupo Privado</span> : <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg uppercase tracking-wider mt-1 inline-block">Global</span>}
+                             {marketFilter !== 'all' ? <span className="text-[10px] font-bold bg-teal-100 text-teal-800 px-2.5 py-1 rounded-lg uppercase tracking-wider mt-1 inline-block">{myGroups.find(g => g.id === marketFilter)?.name || 'Grupo Privado'}</span> : <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg uppercase tracking-wider mt-1 inline-block">Global</span>}
                           </div>
                         </div>
                         <a href={`mailto:${m.email}?subject=Intercambio%20de%20Figuritas%202026`} className="bg-slate-900 hover:bg-black text-white px-5 py-3 rounded-xl text-sm font-black shadow-md transition-all active:scale-95 flex items-center gap-2"><MessageSquare size={16}/> Contactar</a>
@@ -686,7 +734,7 @@ export default function App() {
                <h2 className="text-3xl font-black mb-4 tracking-tight relative z-10">¿Te ayudamos a completar el álbum?</h2>
                <p className="text-rose-100 text-lg mb-8 font-medium relative z-10 max-w-md mx-auto leading-relaxed">Esta aplicación es 100% gratuita y sin publicidad invasiva. Si lograste tus objetivos gracias a los intercambios, ayudanos a mantener los servidores invitándonos un cafecito.</p>
                {/* --- ACÁ REEMPLAZÁ CON TU LINK DE CAFECITO --- */}
-               <a href="https://cafecito.app/TU_USUARIO_ACA" target="_blank" rel="noreferrer" className="bg-slate-900 text-white font-black py-5 px-10 rounded-2xl inline-flex items-center gap-3 hover:bg-black transition-all shadow-xl active:scale-95 text-lg relative z-10">
+               <a href="https://cafecito.app/cambio-figuritas" target="_blank" rel="noreferrer" className="bg-slate-900 text-white font-black py-5 px-10 rounded-2xl inline-flex items-center gap-3 hover:bg-black transition-all shadow-xl active:scale-95 text-lg relative z-10">
                  <Coffee size={24}/> Invitar un Cafecito
                </a>
             </div>
@@ -775,9 +823,20 @@ export default function App() {
         <button onClick={() => setActiveTab('groups')} className={`flex flex-col items-center py-2 px-4 rounded-2xl transition-all duration-300 ${activeTab === 'groups' ? 'bg-teal-50 text-teal-700 shadow-sm scale-105' : 'text-slate-400 hover:text-slate-600'}`}>
           <Shield size={24} strokeWidth={activeTab === 'groups' ? 3 : 2} /> <span className={`text-[10px] mt-1.5 uppercase tracking-tighter ${activeTab === 'groups' ? 'font-black' : 'font-bold'}`}>Grupos</span>
         </button>
-        <button onClick={() => setActiveTab('market')} className={`flex flex-col items-center py-2 px-4 rounded-2xl transition-all duration-300 ${activeTab === 'market' ? 'bg-indigo-50 text-indigo-700 shadow-sm scale-105' : 'text-slate-400 hover:text-slate-600'}`}>
-          <Zap size={24} strokeWidth={activeTab === 'market' ? 3 : 2} /> <span className={`text-[10px] mt-1.5 uppercase tracking-tighter ${activeTab === 'market' ? 'font-black' : 'font-bold'}`}>Cambio</span>
+        
+        {/* BOTÓN CAMBIO CON GLOBITO ROJO DE NOTIFICACIÓN */}
+        <button onClick={() => setActiveTab('market')} className={`relative flex flex-col items-center py-2 px-4 rounded-2xl transition-all duration-300 ${activeTab === 'market' ? 'bg-indigo-50 text-indigo-700 shadow-sm scale-105' : 'text-slate-400 hover:text-slate-600'}`}>
+          <div className="relative">
+             <Zap size={24} strokeWidth={activeTab === 'market' ? 3 : 2} />
+             {groupMatchesCount > 0 && (
+                <span className="absolute -top-1 -right-2 bg-rose-500 text-white text-[10px] font-black w-4 h-4 flex items-center justify-center rounded-full shadow-sm border border-white">
+                   {groupMatchesCount}
+                </span>
+             )}
+          </div>
+          <span className={`text-[10px] mt-1.5 uppercase tracking-tighter ${activeTab === 'market' ? 'font-black' : 'font-bold'}`}>Cambio</span>
         </button>
+        
         <button onClick={() => setActiveTab('support')} className={`flex flex-col items-center py-2 px-4 rounded-2xl transition-all duration-300 ${activeTab === 'support' ? 'bg-rose-50 text-rose-600 shadow-sm scale-105' : 'text-slate-400 hover:text-slate-600'}`}>
           <Heart size={24} strokeWidth={activeTab === 'support' ? 3 : 2} /> <span className={`text-[10px] mt-1.5 uppercase tracking-tighter ${activeTab === 'support' ? 'font-black' : 'font-bold'}`}>Apoyar</span>
         </button>
