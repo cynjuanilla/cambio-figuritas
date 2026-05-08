@@ -15,16 +15,15 @@ const firebaseConfig = {
   measurementId: "G-CX5LX6X6TR"
 };
 
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const appId = 'album-2026-pro';
 
-// --- DATA DEL ÁLBUM BASADO EN EL PDF OFICIAL (980 FIGURITAS) ---
+// --- DATA DEL ÁLBUM BASADO EN EL PDF OFICIAL ---
 const TEAMS = [
-  { id: 'FWC', name: 'Especiales', flag: '🌟', start: 0, end: 9, isGolden: true },
-  { id: 'CC', name: 'Coca-Cola', flag: '🥤', start: 1, end: 10, isGolden: true },
+  { id: 'FWC', name: 'Especiales', flag: '🌟', start: 0, end: 18, isGolden: true },
+  { id: 'CC', name: 'Coca-Cola', flag: '🥤', start: 1, end: 14, isGolden: true },
   { id: 'MEX', name: 'México', flag: '🇲🇽', start: 1, end: 20 }, { id: 'RSA', name: 'Sudáfrica', flag: '🇿🇦', start: 1, end: 20 }, { id: 'KOR', name: 'Corea Sur', flag: '🇰🇷', start: 1, end: 20 }, { id: 'CZE', name: 'Rep. Checa', flag: '🇨🇿', start: 1, end: 20 },
   { id: 'CAN', name: 'Canadá', flag: '🇨🇦', start: 1, end: 20 }, { id: 'BIH', name: 'Bosnia', flag: '🇧🇦', start: 1, end: 20 }, { id: 'QAT', name: 'Qatar', flag: '🇶🇦', start: 1, end: 20 }, { id: 'SUI', name: 'Suiza', flag: '🇨🇭', start: 1, end: 20 },
   { id: 'BRA', name: 'Brasil', flag: '🇧🇷', start: 1, end: 20 }, { id: 'MAR', name: 'Marruecos', flag: '🇲🇦', start: 1, end: 20 }, { id: 'HAI', name: 'Haití', flag: '🇭🇹', start: 1, end: 20 }, { id: 'SCO', name: 'Escocia', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', start: 1, end: 20 },
@@ -687,7 +686,7 @@ export default function App() {
                <h2 className="text-3xl font-black mb-4 tracking-tight relative z-10">¿Te ayudamos a completar el álbum?</h2>
                <p className="text-rose-100 text-lg mb-8 font-medium relative z-10 max-w-md mx-auto leading-relaxed">Esta aplicación es 100% gratuita y sin publicidad invasiva. Si lograste tus objetivos gracias a los intercambios, ayudanos a mantener los servidores invitándonos un cafecito.</p>
                {/* --- ACÁ REEMPLAZÁ CON TU LINK DE CAFECITO --- */}
-               <a href="https://cafecito.app/cambio-figuritas" target="_blank" rel="noreferrer" className="bg-slate-900 text-white font-black py-5 px-10 rounded-2xl inline-flex items-center gap-3 hover:bg-black transition-all shadow-xl active:scale-95 text-lg relative z-10">
+               <a href="https://cafecito.app/TU_USUARIO_ACA" target="_blank" rel="noreferrer" className="bg-slate-900 text-white font-black py-5 px-10 rounded-2xl inline-flex items-center gap-3 hover:bg-black transition-all shadow-xl active:scale-95 text-lg relative z-10">
                  <Coffee size={24}/> Invitar un Cafecito
                </a>
             </div>
