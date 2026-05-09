@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Book, RefreshCw, Star, Users, Check, Plus, Minus, Search, Shield, Key, PlusCircle, MessageSquare, LogOut, Heart, Coffee, Type, CheckSquare, Trash2, Globe, Share2, Copy, Image as ImageIcon, Zap, Printer, X, Bell, Edit2 } from 'lucide-react';
+import { Book, RefreshCw, Star, Users, Check, Plus, Minus, Search, Shield, Key, PlusCircle, MessageSquare, LogOut, Heart, Coffee, Type, CheckSquare, Trash2, Globe, Share2, Copy, Image as ImageIcon, Zap, Printer, X, Bell, Edit2, Lock, ShieldCheck, KeyRound } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from 'firebase/firestore';
@@ -20,10 +20,14 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const appId = 'album-2026-pro';
 
-// --- DATA DEL ÁLBUM BASADO EN EL PDF OFICIAL ---
+// --- CONFIGURACIÓN DE ACCESO Y MONETIZACIÓN ---
+// IMPORTANTE: Escribí acá tu correo de Google exacto para tener poderes de Administrador
+const ADMIN_EMAIL = "racingteamo@gmail.com"; 
+
+// --- DATA DEL ÁLBUM BASADO EN EL PDF OFICIAL (980 FIGURITAS) ---
 const TEAMS = [
-  { id: 'FWC', name: 'Especiales', flag: '🌟', start: 0, end: 18, isGolden: true },
-  { id: 'CC', name: 'Coca-Cola', flag: '🥤', start: 1, end: 14, isGolden: true },
+  { id: 'FWC', name: 'Especiales', flag: '🌟', start: 0, end: 9, isGolden: true },
+  { id: 'CC', name: 'Coca-Cola', flag: '🥤', start: 1, end: 10, isGolden: true },
   { id: 'MEX', name: 'México', flag: '🇲🇽', start: 1, end: 20 }, { id: 'RSA', name: 'Sudáfrica', flag: '🇿🇦', start: 1, end: 20 }, { id: 'KOR', name: 'Corea Sur', flag: '🇰🇷', start: 1, end: 20 }, { id: 'CZE', name: 'Rep. Checa', flag: '🇨🇿', start: 1, end: 20 },
   { id: 'CAN', name: 'Canadá', flag: '🇨🇦', start: 1, end: 20 }, { id: 'BIH', name: 'Bosnia', flag: '🇧🇦', start: 1, end: 20 }, { id: 'QAT', name: 'Qatar', flag: '🇶🇦', start: 1, end: 20 }, { id: 'SUI', name: 'Suiza', flag: '🇨🇭', start: 1, end: 20 },
   { id: 'BRA', name: 'Brasil', flag: '🇧🇷', start: 1, end: 20 }, { id: 'MAR', name: 'Marruecos', flag: '🇲🇦', start: 1, end: 20 }, { id: 'HAI', name: 'Haití', flag: '🇭🇹', start: 1, end: 20 }, { id: 'SCO', name: 'Escocia', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', start: 1, end: 20 },
@@ -50,12 +54,13 @@ const AdBanner = () => {
 
   return (
     <div className="w-full bg-slate-200 border-2 border-dashed border-slate-300 text-slate-500 flex flex-col items-center justify-center py-4 px-2 rounded-xl text-center shadow-inner my-4 min-h-[100px] overflow-hidden">
-      <ins className="adsbygoogle"
+      {<ins className="adsbygoogle"
            style={{ display: 'block', width: '100%' }}
            data-ad-client="ca-pub-8830921682992590" 
            data-ad-slot="9332723829"
            data-ad-format="auto"
            data-full-width-responsive="true"></ins>
+      }
       <span className="text-xs uppercase font-bold tracking-widest mb-1">Espacio Publicitario</span>
       <span className="text-[10px]">Tus anuncios de AdSense aparecerán aquí.</span>
     </div>
@@ -65,6 +70,13 @@ const AdBanner = () => {
 export default function App() {
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('album');
+  
+  // Estados de Usuario Premium y Pagos
+  const [isPremium, setIsPremium] = useState(false);
+  const [unlockCode, setUnlockCode] = useState('');
+  const [adminCodes, setAdminCodes] = useState([]);
+  const [buyerInfo, setBuyerInfo] = useState(''); // Nuevo estado para registrar a quién le vendés el código
+
   const [myStickers, setMyStickers] = useState({});
   const [marketData, setMarketData] = useState([]);
   const [selectedTeamId, setSelectedTeamId] = useState(TEAMS[0].id);
@@ -78,6 +90,8 @@ export default function App() {
   const [showQuickList, setShowQuickList] = useState(false);
   const [quickInputStr, setQuickInputStr] = useState('');
   const canvasRef = useRef(null);
+
+  const userHasAccess = useMemo(() => isPremium || (user && user.email === ADMIN_EMAIL), [isPremium, user]);
 
   // --- FILTROS Y BÚSQUEDAS ---
   const filteredTeams = useMemo(() => TEAMS.filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase()) || t.id.toLowerCase().includes(searchQuery.toLowerCase())), [searchQuery]);
@@ -95,7 +109,7 @@ export default function App() {
       await signInWithPopup(auth, provider);
     } catch (error) {
       console.error(error);
-      alert("Error en Firebase: Asegurate de agregar tu dominio en Firebase Authentication > Dominios autorizados.");
+      alert("Error en Firebase al iniciar sesión.");
     }
   };
 
@@ -103,9 +117,10 @@ export default function App() {
     signOut(auth);
     setMyStickers({});
     setMyGroups([]);
+    setIsPremium(false);
   };
 
-  // --- CARGA DE DATOS ---
+  // --- CARGA DE DATOS PRINCIPAL ---
   useEffect(() => {
     if (!user) return;
     const myDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
@@ -114,6 +129,9 @@ export default function App() {
         const data = docSnap.data();
         setMyStickers(data.stickers || {});
         setMyGroups(data.groups || []);
+        setIsPremium(data.isPremium || false);
+      } else {
+        setIsPremium(false);
       }
     });
 
@@ -125,6 +143,55 @@ export default function App() {
     });
     return () => { unsubPriv(); unsubPub(); };
   }, [user]);
+
+  // --- CARGA DE DATOS ADMIN ---
+  useEffect(() => {
+    if (user?.email === ADMIN_EMAIL && activeTab === 'admin') {
+        const codesRef = collection(db, 'artifacts', appId, 'public', 'data', 'access_codes');
+        const unsub = onSnapshot(codesRef, snap => {
+            const c = [];
+            snap.forEach(d => c.push({ id: d.id, ...d.data() }));
+            setAdminCodes(c.sort((a,b) => b.createdAt.localeCompare(a.createdAt)));
+        });
+        return () => unsub();
+    }
+  }, [user, activeTab]);
+
+  // --- FUNCIONES DE ACCESO (PAYWALL) ---
+  const handleRedeemCode = async () => {
+    if (!unlockCode.trim()) return alert("Ingresá un código.");
+    const codeId = unlockCode.trim().toUpperCase();
+    const codeRef = doc(db, 'artifacts', appId, 'public', 'data', 'access_codes', codeId);
+    
+    try {
+      const codeSnap = await getDoc(codeRef);
+      if (codeSnap.exists() && !codeSnap.data().used) {
+        // Código válido: Marcar como usado y dar Premium
+        await setDoc(codeRef, { used: true, usedByEmail: user.email, usedAt: new Date().toISOString() }, { merge: true });
+        await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'), { isPremium: true }, { merge: true });
+        alert("¡Código canjeado con éxito! Bienvenido a tu Álbum Premium.");
+      } else {
+        alert("El código es inválido o ya fue utilizado.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error al verificar el código de acceso.");
+    }
+  };
+
+  const generateNewCode = async () => {
+    if (!buyerInfo.trim()) return alert("Por favor, ingresá el nombre o email de a quién le vas a dar el código para llevar el control.");
+    
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'access_codes', code), {
+       used: false,
+       createdBy: user.email,
+       assignedTo: buyerInfo.trim(), // Se guarda a quién se le vendió
+       createdAt: new Date().toISOString()
+    });
+    alert(`Nuevo código generado: ${code}\nAsignado a: ${buyerInfo}\nYa está listo para vender o compartir.`);
+    setBuyerInfo(''); // Limpia el campo después de crear
+  };
 
   // --- GUARDADO GENERAL ---
   const saveData = async (stickers, groupsToSave) => {
@@ -151,9 +218,7 @@ export default function App() {
   const updateSticker = (id, delta) => {
     const next = { ...myStickers };
     const count = (next[id] || 0) + delta;
-    
     next[id] = count <= 0 ? 0 : count;
-    
     setMyStickers(next); 
     saveData(next);
   };
@@ -201,7 +266,6 @@ export default function App() {
     setMyGroups(updated); setNewGroupName('');
     saveData(myStickers, updated);
 
-    // Guarda el nombre públicamente para que la app lo sepa al unirse
     try {
       await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'groups', groupId), { name: newGroupName });
     } catch (e) { console.error(e); }
@@ -419,7 +483,10 @@ export default function App() {
     alert("Lista copiada al portapapeles. ¡Pégala en WhatsApp!");
   };
 
-  // --- RENDER: PANTALLA DE LOGIN ---
+
+  // =========================================================================
+  // RENDER: PANTALLA DE LOGIN
+  // =========================================================================
   if (!user) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
@@ -461,7 +528,64 @@ export default function App() {
     );
   }
 
-  // --- RENDER: APLICACIÓN PRINCIPAL ---
+  // =========================================================================
+  // RENDER: PAYWALL (MURO DE PAGO)
+  // =========================================================================
+  if (user && !userHasAccess) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans relative overflow-hidden">
+          {/* Círculos decorativos de fondo */}
+          <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70"></div>
+          <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70"></div>
+
+          <div className="bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-2xl max-w-md w-full text-center border border-slate-100 relative z-10 transform transition-all">
+              <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-indigo-100">
+                  <Lock size={36} className="text-indigo-600" />
+              </div>
+              <h2 className="text-3xl font-black text-slate-800 mb-3">Acceso Premium</h2>
+              <p className="text-slate-500 mb-8 font-medium leading-relaxed">
+                ¡Hola, {user.displayName}! Para usar la plataforma y gestionar tu álbum sin límites, necesitás un código de acceso.
+              </p>
+              
+              <div className="bg-slate-50 p-6 rounded-3xl mb-8 border border-slate-200 shadow-inner">
+                 <h3 className="font-black text-slate-800 text-lg mb-2 flex justify-center items-center gap-2">1. Conseguí tu código</h3>
+                 <p className="text-sm text-slate-600 mb-5">El acceso de por vida cuesta solo <strong className="text-indigo-700 text-lg">$1000 ARS</strong>.</p>
+                 
+                 {/* ACÁ PODÉS PONER TU LINK DE MERCADO PAGO, ALIAS, O WHATSAPP */}
+                 <a href="https://link.mercadopago.com.ar/TULINKACA" target="_blank" rel="noreferrer" className="bg-[#009EE3] text-white font-black py-4 px-6 rounded-2xl block w-full hover:bg-[#008DD0] transition shadow-md hover:shadow-lg transform active:scale-95">
+                   Pagar con MercadoPago
+                 </a>
+                 <p className="text-[11px] text-slate-400 mt-4 leading-tight font-medium">Una vez que pagues, comunicate con el administrador para recibir tu código único de 6 caracteres.</p>
+              </div>
+
+              <div>
+                 <h3 className="font-black text-slate-800 text-lg mb-3">2. Ingresá tu código</h3>
+                 <div className="flex flex-col gap-3">
+                   <input 
+                     type="text" 
+                     placeholder="Ej: A1B2C3" 
+                     value={unlockCode}
+                     onChange={e => setUnlockCode(e.target.value.toUpperCase())}
+                     className="w-full bg-white border-2 border-slate-200 rounded-2xl px-4 py-4 text-center text-xl font-black tracking-[0.3em] uppercase focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition shadow-sm"
+                     maxLength={6}
+                   />
+                   <button onClick={handleRedeemCode} className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl hover:bg-black transition shadow-xl flex justify-center items-center gap-2 transform active:scale-95">
+                     <KeyRound size={20}/> Desbloquear Álbum
+                   </button>
+                 </div>
+              </div>
+              
+              <button onClick={handleLogout} className="mt-8 text-sm font-bold text-slate-400 hover:text-slate-600 transition flex items-center justify-center gap-2 mx-auto">
+                <LogOut size={16}/> Cerrar Sesión
+              </button>
+          </div>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // RENDER: APLICACIÓN PRINCIPAL & PANEL ADMIN
+  // =========================================================================
   return (
     <>
     {/* --- VISTA DE IMPRESIÓN (GRILLA COMPLETA TIPO CONTROL) --- */}
@@ -557,6 +681,67 @@ export default function App() {
 
       <main className="p-4 max-w-4xl mx-auto w-full flex-1 flex flex-col gap-5">
         
+        {/* PESTAÑA: PANEL DE ADMINISTRADOR (SOLO VISIBLE PARA LA DUEÑA) */}
+        {activeTab === 'admin' && user.email === ADMIN_EMAIL && (
+           <div className="space-y-6">
+               <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-[2rem] shadow-lg flex flex-col lg:flex-row justify-between items-center gap-6 text-center sm:text-left">
+                  <div>
+                     <h2 className="text-2xl font-black flex justify-center sm:justify-start items-center gap-2"><ShieldCheck size={28} className="text-yellow-400"/> Panel de Control</h2>
+                     <p className="text-slate-400 mt-1 text-sm font-medium">Generá códigos y llevales el rastro a tus ventas.</p>
+                  </div>
+                  
+                  {/* NUEVO INPUT PARA ASIGNAR EL CÓDIGO */}
+                  <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto items-center">
+                    <input 
+                      type="text" 
+                      placeholder="Email o Nombre del cliente..." 
+                      value={buyerInfo}
+                      onChange={(e) => setBuyerInfo(e.target.value)}
+                      className="px-4 py-4 sm:py-3 rounded-2xl text-sm font-medium text-slate-900 border border-slate-700 bg-white/10 focus:bg-white focus:text-slate-900 focus:outline-none focus:ring-4 focus:ring-yellow-500/50 w-full sm:w-64 placeholder:text-slate-500 transition-all"
+                    />
+                    <button onClick={generateNewCode} className="w-full sm:w-auto bg-gradient-to-r from-yellow-400 to-amber-500 text-amber-950 px-6 py-4 sm:py-3 rounded-2xl font-black hover:scale-105 transition-transform shadow-[0_4px_20px_rgba(251,191,36,0.3)] flex justify-center items-center gap-2">
+                       <PlusCircle size={20}/> Generar
+                    </button>
+                  </div>
+               </div>
+               
+               <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+                  <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+                     <h3 className="font-black text-slate-800 text-xl">Códigos Generados</h3>
+                     <span className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-xs font-black">{adminCodes.length} Total</span>
+                  </div>
+                  
+                  {adminCodes.length === 0 ? (
+                    <p className="text-center text-slate-400 py-10 font-medium border-2 border-dashed border-slate-200 rounded-2xl">Aún no creaste ningún código.</p>
+                  ) : (
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                       {adminCodes.map(c => (
+                          <div key={c.id} className={`p-5 rounded-2xl border-2 transition-all flex flex-col ${c.used ? 'bg-slate-50 border-slate-200 opacity-60' : 'bg-emerald-50 border-emerald-200 shadow-sm'}`}>
+                             <div className="flex justify-between items-start mb-2">
+                                <span className={`font-mono text-xl font-black tracking-widest ${c.used ? 'text-slate-400 line-through' : 'text-emerald-700'}`}>{c.id}</span>
+                                <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-md ${c.used ? 'bg-slate-200 text-slate-500' : 'bg-emerald-500 text-white shadow-sm'}`}>
+                                  {c.used ? 'Usado' : 'Disponible'}
+                                </span>
+                             </div>
+                             
+                             {/* MUESTRA A QUIÉN SE LE VENDIÓ */}
+                             <div className="text-[11px] text-slate-500 mb-2">Vendido a: <span className="font-bold text-slate-700">{c.assignedTo || 'Sin asignar'}</span></div>
+                             
+                             <div className="mt-auto pt-3 border-t border-slate-200/50">
+                               {c.used ? (
+                                 <div className="text-[10px] text-slate-400 font-medium truncate" title={c.usedByEmail}>Activado por: <br/><strong className="text-slate-600">{c.usedByEmail}</strong></div>
+                               ) : (
+                                 <button onClick={() => { navigator.clipboard.writeText(c.id); alert("Código copiado"); }} className="text-xs font-bold text-emerald-600 hover:text-emerald-800 flex items-center gap-1 w-full justify-center bg-emerald-100/50 py-2 rounded-xl transition-colors hover:bg-emerald-100"><Copy size={14}/> Copiar Código</button>
+                               )}
+                             </div>
+                          </div>
+                       ))}
+                    </div>
+                  )}
+               </div>
+           </div>
+        )}
+
         {/* PESTAÑA: ÁLBUM */}
         {activeTab === 'album' && (
           <>
@@ -776,7 +961,7 @@ export default function App() {
                <div className="absolute top-0 left-0 w-full h-full bg-white opacity-5 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #fff 2px, transparent 2px)', backgroundSize: '30px 30px' }}></div>
                <Heart size={64} className="mx-auto mb-6 text-rose-200 relative z-10" fill="currentColor" />
                <h2 className="text-3xl font-black mb-4 tracking-tight relative z-10">¿Te ayudamos a completar el álbum?</h2>
-               <p className="text-rose-100 text-lg mb-8 font-medium relative z-10 max-w-md mx-auto leading-relaxed">Esta aplicación es 100% gratuita y sin publicidad invasiva. Si lograste tus objetivos gracias a los intercambios, ayudanos a mantener los servidores invitándonos un cafecito.</p>
+               <p className="text-rose-100 text-lg mb-8 font-medium relative z-10 max-w-md mx-auto leading-relaxed">Si lograste tus objetivos gracias a los intercambios, ayudanos a mantener los servidores invitándonos un cafecito (opcional).</p>
                <a href="https://cafecito.app/cambio-figuritas" target="_blank" rel="noreferrer" className="bg-slate-900 text-white font-black py-5 px-10 rounded-2xl inline-flex items-center gap-3 hover:bg-black transition-all shadow-xl active:scale-95 text-lg relative z-10">
                  <Coffee size={24}/> Invitar un Cafecito
                </a>
@@ -883,6 +1068,13 @@ export default function App() {
         <button onClick={() => setActiveTab('support')} className={`flex flex-col items-center py-2 px-4 rounded-2xl transition-all duration-300 ${activeTab === 'support' ? 'bg-rose-50 text-rose-600 shadow-sm scale-105' : 'text-slate-400 hover:text-slate-600'}`}>
           <Heart size={24} strokeWidth={activeTab === 'support' ? 3 : 2} /> <span className={`text-[10px] mt-1.5 uppercase tracking-tighter ${activeTab === 'support' ? 'font-black' : 'font-bold'}`}>Apoyar</span>
         </button>
+
+        {/* PESTAÑA ADMIN (SOLO DUEÑA) */}
+        {user.email === ADMIN_EMAIL && (
+            <button onClick={() => setActiveTab('admin')} className={`flex flex-col items-center py-2 px-4 rounded-2xl transition-all duration-300 ${activeTab === 'admin' ? 'bg-slate-900 text-yellow-400 shadow-sm scale-105' : 'text-slate-400 hover:text-slate-600'}`}>
+            <ShieldCheck size={24} strokeWidth={activeTab === 'admin' ? 3 : 2} /> <span className={`text-[10px] mt-1.5 uppercase tracking-tighter ${activeTab === 'admin' ? 'font-black' : 'font-bold'}`}>Admin</span>
+            </button>
+        )}
       </nav>
     </div>
     </>
